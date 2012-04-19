@@ -1,3 +1,6 @@
+#ifndef __POINT_H
+#define __POINT_H
+
 class Point {
   public:
     Point();
@@ -12,3 +15,5 @@ class Point {
     float _y;
     float _z;
 };
+
+#endif

@@ -2,15 +2,8 @@
 #include <GL/gl.h>
 #include <stdio.h>
 
-#ifndef __FACE_H
-#define __FACE_H
 #include "face.h"
-#endif
-
-#ifndef __POINT_H
-#define __POINT_H
 #include "point.h"
-#endif
 
 Face::Face(Point p1, Point p2, Point p3):
   _v1(p1), _v2(p2), _v3(p3) {
