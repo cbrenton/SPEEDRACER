@@ -18,7 +18,7 @@ KILL   = killall -9
 SHELL  = /bin/sh
 MAKE   = make
 
-LIBFLAGS = -DGL_GLEXT_PROTOTYPES -lglut -lGLU
+LIBFLAGS = 
 OPTIMIZE = -O3
 ERROR = 
 CFLAGS = $(OPTIMIZE) -Wall -ggdb $(ERROR) $(LIBFLAGS)

@@ -1,5 +1,3 @@
-#include <GL/glut.h>
-#include <GL/gl.h>
 #include <stdio.h>
 #include "point.h"
 
@@ -17,7 +15,7 @@ Point::Point(int num, float x, float y, float z) :
 }
 
 void Point::draw() {
-   glVertex3f(_x, _y, _z);
+   //glVertex3f(_x, _y, _z);
 }
 
 void Point::print() {
