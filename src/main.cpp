@@ -13,7 +13,7 @@
 #include <string.h>
 
 #include "point_t.h"
-#include "face_t.h"
+#include "tri_t.h"
 
 using namespace std;
 
@@ -30,8 +30,8 @@ int GW;
 int GH;
 int display_mode;
 int view_mode;
-vector<point_t> pointList;
-vector<face_t> faceList;
+vector<point_t *> pointList;
+vector<tri_t *> triList;
 
 void readLine(char* str);
 void readStream(istream& is);
@@ -62,7 +62,7 @@ void readStream(istream& is)
 }
 
 //process each line of input save vertices and faces appropriately
-point_t findPt(int ndx) {
+point_t * findPt(int ndx) {
    for (int i = 0; i < (int)pointList.size(); i++) {
       //if (isNum(pointList.at(i), ndx)) {
          return pointList.at(i);
@@ -92,7 +92,8 @@ void readLine(char* str) {
 
       //TODO allocate an object to store the vertex or face
       //store the vertex in a collection
-      point_t newPt = {vi, x, y, z};
+      point_t *newPt = new point_t(vi, x, y, z);
+      //*newPt = {vi, x, y, z};
       pointList.push_back(newPt);
 
 
@@ -103,9 +104,11 @@ void readLine(char* str) {
       if (x > max_x) max_x = x; if (x < min_x) min_x = x;
       if (y > max_y) max_y = y; if (y < min_y) min_y = y;
       if (z > max_z) max_z = z; if (z < min_z) min_z = z;
-   } else if (str[0]=='F' && !strncmp(str,"Face ",5)) {
+   }
+   else if (str[0]=='F' && !strncmp(str,"Face ",5)) {
       //TODO allocate an object to store the vertex or face
-      point_t tmpPt1, tmpPt2, tmpPt3;
+      point_t *tmpPt1, *tmpPt2, *tmpPt3;
+      tmpPt1 = tmpPt2 = tmpPt3 = NULL;
       char* s=str+4;
       int fi=-1;
       for (int t_i = 0;;t_i++) {
@@ -125,14 +128,16 @@ void readLine(char* str) {
          if (t_i == 1){
             // Store the first vertex in your face object
             tmpPt1 = findPt(j);
-         }else if (t_i == 2){
+         }
+         else if (t_i == 2){
             // Store the second vertex in your face object
             tmpPt2 = findPt(j);
-         }else if (t_i == 3){
+         }
+         else if (t_i == 3){
             // Store the third vertex in your face object
             tmpPt3 = findPt(j);
-            face_t newFace = {tmpPt1, tmpPt2, tmpPt3};
-            faceList.push_back(newFace);
+            tri_t *newTri = new tri_t(tmpPt1, tmpPt2, tmpPt3);
+            triList.push_back(newTri);
          }
          // If there is more data to process break out
          if (*s =='{') break;
@@ -158,21 +163,21 @@ void readLine(char* str) {
 }
 
 void printFirstThree() {
-   printf("first 3 vertices:\n");
-   printPt(pointList.at(0));
-   printPt(pointList.at(1));
-   printPt(pointList.at(2));
+   printf("First 3 vertices:\n");
+   pointList.at(0)->print();
+   pointList.at(1)->print();
+   pointList.at(2)->print();
 }
 
-int main( int argc, char** argv ) {
+int main(int argc, char** argv) {
    // Initialization
    max_x = max_y = max_z = FLT_MIN;
    min_x = min_y = min_z = FLT_MAX;
-   cx =cy = cz = 0;
+   cx = cy = cz = 0;
    max_extent = 1.0;
    // Make sure a file to read is specified
    if (argc > 1) {
-      cout << "file " << argv[1] << endl;
+      printf("Using file %s\n", argv[1]);
       // Read in the mesh file specified
       ReadFile(argv[1]);
       // Only for debugging
@@ -184,9 +189,9 @@ int main( int argc, char** argv ) {
 
       // Divide by the number of vertices you read in!!!
 
-      cx = cx/faceList.size();
-      cy = cy/faceList.size();
-      cz = cz/faceList.size();
+      cx = cx/(float)triList.size();
+      cy = cy/(float)triList.size();
+      cz = cz/(float)triList.size();
    } else {
       cout << "format is: meshparser filename" << endl;
    }

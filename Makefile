@@ -20,7 +20,7 @@ MAKE   = make
 
 LIBFLAGS = 
 OPTIMIZE = -O3
-ERROR = 
+ERROR = -Wconversion -Werror
 CFLAGS = $(OPTIMIZE) -Wall -ggdb $(ERROR) $(LIBFLAGS)
 LDFLAGS = $(OPTIMIZE) $(ERROR) $(LIBFLAGS)
 
