@@ -38,13 +38,14 @@ LIBS = $(LIBFLAGS) -lm
 
 # The source files
 SRCS = $(wildcard src/*.cpp) $(wildcard src/**/*.cpp)
+HEADER = $(wildcard src/*.h) $(wildcard src/**/*.h)
 
 OBJS = $(SRCS:.cpp=.o)
 
 # Rules for building
 all: $(TARGET)
 
-$(TARGET): $(OBJS)
+$(TARGET): $(OBJS) $(HEADERS)
 	$(CC) $(LDFLAGS) $(OBJS) -o $@
 
 .cpp.o:

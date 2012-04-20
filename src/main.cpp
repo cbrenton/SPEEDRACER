@@ -12,8 +12,8 @@
 #include <assert.h>
 #include <string.h>
 
-#include "point.h"
-#include "face.h"
+#include "point_t.h"
+#include "face_t.h"
 
 using namespace std;
 
@@ -30,8 +30,8 @@ int GW;
 int GH;
 int display_mode;
 int view_mode;
-vector<Point> pointList;
-vector<Face> faceList;
+vector<point_t> pointList;
+vector<face_t> faceList;
 
 void readLine(char* str);
 void readStream(istream& is);
@@ -62,11 +62,11 @@ void readStream(istream& is)
 }
 
 //process each line of input save vertices and faces appropriately
-Point findPt(int ndx) {
+point_t findPt(int ndx) {
    for (int i = 0; i < (int)pointList.size(); i++) {
-      if (pointList.at(i).isNum(ndx)) {
+      //if (isNum(pointList.at(i), ndx)) {
          return pointList.at(i);
-      }
+      //}
    }
    fprintf(stderr, "Error: vertex not found.\n");
    exit(EXIT_FAILURE);
@@ -92,9 +92,8 @@ void readLine(char* str) {
 
       //TODO allocate an object to store the vertex or face
       //store the vertex in a collection
-      //tmpPt.update(vi, x, y, z);
-      //pointList.push_back(tmpPt);
-      pointList.push_back(Point(vi, x, y, z));
+      point_t newPt = {vi, x, y, z};
+      pointList.push_back(newPt);
 
 
       //This code is house keeping to display in center of the scene
@@ -106,51 +105,45 @@ void readLine(char* str) {
       if (z > max_z) max_z = z; if (z < min_z) min_z = z;
    } else if (str[0]=='F' && !strncmp(str,"Face ",5)) {
       //TODO allocate an object to store the vertex or face
-      //Face tmpFace = new Face();
-      Point tmpPt1 = Point();
-      Point tmpPt2 = Point();
-      Point tmpPt3 = Point();
+      point_t tmpPt1, tmpPt2, tmpPt3;
       char* s=str+4;
       int fi=-1;
       for (int t_i = 0;;t_i++) {
          while (*s && isspace(*s)) s++;
-         //if we reach the end of the line break out of the loop
+         // If we reach the end of the line break out of the loop
          if (!*s) break;
-         //save the position of the current character
+         // Save the position of the current character
          char* beg=s;
-         //advance to next space
+         // Advance to next space
          while (*s && isdigit(*s)) s++;
-         //covert the character to an integer
+         // Convert the character to an integer
          int j=atoi(beg);
-         //the first number we encounter will be the face index, don't store it
+         // The first number we encounter will be the face index, don't store it
          if (fi<0) { fi=j; continue; }
-         //otherwise process the digit we've grabbed in j as a vertex index
-         //the first number will be the face id the following are vertex ids
+         // Otherwise, process the digit we've grabbed in j as a vertex index.
+         // The first number will be the face id; the following are vertex ids.
          if (t_i == 1){
-            //TODO store the first vertex in your face object
-            //tmpFace.addV1(pointList.at(fi);
+            // Store the first vertex in your face object
             tmpPt1 = findPt(j);
          }else if (t_i == 2){
-            //TODO store the second vertex in your face object
-            //tmpFace.addV2(pointList.at(fi);
+            // Store the second vertex in your face object
             tmpPt2 = findPt(j);
          }else if (t_i == 3){
-            //TODO store the third vertex in your face object
-            //tmpFace.addV3(pointList.at(fi);
+            // Store the third vertex in your face object
             tmpPt3 = findPt(j);
-            faceList.push_back(Face(tmpPt1, tmpPt2, tmpPt3));
+            face_t newFace = {tmpPt1, tmpPt2, tmpPt3};
+            faceList.push_back(newFace);
          }
-         //faceList.push_back(tmpFace);
-         //if there is more data to process break out
+         // If there is more data to process break out
          if (*s =='{') break;
       }
-      //possibly process colors if the mesh has colors
+      // Possibly process colors if the mesh has colors
       if (*s && *s =='{'){
          char *s1 = s+1;
          cout << "trying to parse color " << !strncmp(s1,"rgb",3) << endl;
-         //if we're reading off a color
+         // If we're reading off a color
          if (!strncmp(s1,"rgb=",4)) {
-            //grab the values of the string
+            // Grab the values of the string
             if (sscanf(s1,"rgb=(%g %g %g) matid=%d",&r,&g,&b,&mat)!=4)
             {
                printf("error during reading rgb values\n");
@@ -160,37 +153,36 @@ void readLine(char* str) {
             }
          }
       }
-      //store the triangle read in to your face collection
+      // Store the new triangle in your face collection
    }
 }
 
-//TODO implement a simple routine that prints the first three vertices and faces to test that you successfully stored the data your data structures....
 void printFirstThree() {
    printf("first 3 vertices:\n");
-   pointList.at(0).print();
-   pointList.at(1).print();
-   pointList.at(2).print();
+   printPt(pointList.at(0));
+   printPt(pointList.at(1));
+   printPt(pointList.at(2));
 }
 
 int main( int argc, char** argv ) {
-   //initialization
+   // Initialization
    max_x = max_y = max_z = FLT_MIN;
    min_x = min_y = min_z = FLT_MAX;
    cx =cy = cz = 0;
    max_extent = 1.0;
-   //make sure a file to read is specified
+   // Make sure a file to read is specified
    if (argc > 1) {
       cout << "file " << argv[1] << endl;
-      //read-in the mesh file specified
+      // Read in the mesh file specified
       ReadFile(argv[1]);
-      //only for debugging
+      // Only for debugging
       printFirstThree();
 
-      //once the file is parsed find out the maximum extent to center and scale mesh
+      // Once the file is parsed find out the maximum extent to center and scale mesh
       max_extent = max_x - min_x;
       if (max_y - min_y > max_extent) max_extent = max_y - min_y;
 
-      //TODO divide by the number of vertices you read in!!!
+      // Divide by the number of vertices you read in!!!
 
       cx = cx/faceList.size();
       cy = cy/faceList.size();
