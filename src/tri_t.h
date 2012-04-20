@@ -18,14 +18,13 @@ struct tri_t
    {
    }
 
-   void w2p(int w, int h)
+   inline void w2p(int w, int h)
    {
       p1->w2p(w, h);
       p2->w2p(w, h);
       p3->w2p(w, h);
    }
 
-   //int triangle_hit(const tri_t & t_t, const ray_t & ray, float *t)
    int triangle_hit(const ray_t & ray, float *t)
    {
       float result = -1;

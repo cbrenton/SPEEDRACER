@@ -32,13 +32,17 @@ void readLine(char* str);
 void readStream(istream& is);
 
 //open the file for reading
-void ReadFile(char* filename) {
+void ReadFile(char* filename)
+{
    printf("Reading coordinates from %s\n", filename);
 
    ifstream in_f(filename);
-   if (!in_f)  {
+   if (!in_f)
+   {
       printf("Could not open file %s\n", filename);
-   } else {
+   }
+   else
+   {
       readStream(in_f);
    }
 }
@@ -47,7 +51,8 @@ void ReadFile(char* filename) {
 void readStream(istream& is)
 {
    char str[256];
-   for (;is;) {
+   for (;is;)
+   {
       is >> ws;
       is.get(str,sizeof(str));
       if (!is) break;
@@ -57,9 +62,12 @@ void readStream(istream& is)
 }
 
 // Process each line of input save vertices and faces appropriately
-point_t * findPt(int ndx) {
-   for (int i = 0; i < (int)pointList.size(); i++) {
-      if (pointList.at(i)->isNum(ndx)) {
+point_t * findPt(int ndx)
+{
+   for (int i = 0; i < (int)pointList.size(); i++)
+   {
+      if (pointList.at(i)->isNum(ndx))
+      {
          return pointList.at(i);
       }
    }
@@ -67,7 +75,8 @@ point_t * findPt(int ndx) {
    exit(EXIT_FAILURE);
 }
 
-void readLine(char* str) {
+void readLine(char* str)
+{
    int vi;
    float x, y, z;
    float r, g, b;
@@ -75,7 +84,8 @@ void readLine(char* str) {
 
    if (str[0]=='#') return;
    // Read a vertex or face
-   if (str[0]=='V' && !strncmp(str,"Vertex ",7)) {
+   if (str[0]=='V' && !strncmp(str,"Vertex ",7))
+   {
 
       if (sscanf(str,"Vertex %d %g %g %g",&vi,&x,&y,&z) !=4)
       {
@@ -89,12 +99,14 @@ void readLine(char* str) {
       point_t *newPt = new point_t(vi, x, y, z);
       pointList.push_back(newPt);
    }
-   else if (str[0]=='F' && !strncmp(str,"Face ",5)) {
+   else if (str[0]=='F' && !strncmp(str,"Face ",5))
+   {
       point_t *tmpPt1, *tmpPt2, *tmpPt3;
       tmpPt1 = tmpPt2 = tmpPt3 = NULL;
       char* s=str+4;
       int fi=-1;
-      for (int t_i = 0;;t_i++) {
+      for (int t_i = 0;;t_i++)
+      {
          while (*s && isspace(*s)) s++;
          // If we reach the end of the line break out of the loop
          if (!*s) break;
@@ -105,18 +117,22 @@ void readLine(char* str) {
          // Convert the character to an integer
          int j=atoi(beg);
          // The first number we encounter will be the face index, don't store it
-         if (fi<0) { fi=j; continue; }
+         if (fi<0)
+         { fi=j; continue; }
          // Otherwise, process the digit we've grabbed in j as a vertex index.
          // The first number will be the face id; the following are vertex ids.
-         if (t_i == 1){
+         if (t_i == 1)
+         {
             // Store the first vertex in your face object
             tmpPt1 = findPt(j);
          }
-         else if (t_i == 2){
+         else if (t_i == 2)
+         {
             // Store the second vertex in your face object
             tmpPt2 = findPt(j);
          }
-         else if (t_i == 3){
+         else if (t_i == 3)
+         {
             // Store the third vertex in your face object
             tmpPt3 = findPt(j);
             tri_t *newTri = new tri_t(tmpPt1, tmpPt2, tmpPt3);
@@ -126,11 +142,13 @@ void readLine(char* str) {
          if (*s =='{') break;
       }
       // Possibly process colors if the mesh has colors
-      if (*s && *s =='{'){
+      if (*s && *s =='{')
+      {
          char *s1 = s+1;
          cout << "trying to parse color " << !strncmp(s1,"rgb",3) << endl;
          // If we're reading off a color
-         if (!strncmp(s1,"rgb=",4)) {
+         if (!strncmp(s1,"rgb=",4))
+         {
             // Grab the values of the string
             if (sscanf(s1,"rgb=(%g %g %g) matid=%d",&r,&g,&b,&mat)!=4)
             {
@@ -145,16 +163,19 @@ void readLine(char* str) {
    }
 }
 
-void printFirstThree() {
+void printFirstThree()
+{
    printf("First 3 vertices:\n");
    pointList[0]->print();
    pointList[1]->print();
    pointList[2]->print();
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
    // Make sure a file to read is specified
-   if (argc > 1) {
+   if (argc > 1)
+   {
       printf("Using file %s\n", argv[1]);
       // Read in the mesh file specified
       ReadFile(argv[1]);
@@ -165,7 +186,9 @@ int main(int argc, char** argv) {
       }
       // Only for debugging
       printFirstThree();
-   } else {
+   }
+   else
+   {
       cout << "format is: meshparser filename" << endl;
    }
 }
