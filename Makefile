@@ -18,7 +18,8 @@ KILL   = killall -9
 SHELL  = /bin/sh
 MAKE   = make
 
-LIBFLAGS = 
+IFLAGS = -I./lib -I./lib/pngwriter/include -DNO_FREETYPE
+LFLAGS = -lpng -lz -lpngwriter -L./lib/pngwriter/lib
 OPTIMIZE = -O3
 ERROR = -Wconversion -Werror
 CFLAGS = $(OPTIMIZE) -Wall -ggdb $(ERROR) $(LIBFLAGS)
@@ -50,6 +51,10 @@ $(TARGET): $(OBJS) $(HEADERS)
 
 .cpp.o:
 	$(CC) $(CFLAGS) -c $< -o $@
+
+.PHONY: lib
+lib:
+	$(SHELL) ./lib.sh
 
 run:
 	./$(TARGET) $(ARGS)

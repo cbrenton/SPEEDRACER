@@ -1,6 +1,9 @@
 all:
 	+make -C ../
 
+lib:
+	make lib -C ../
+
 run:
 	make run -C ../
 
