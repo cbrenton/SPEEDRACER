@@ -15,17 +15,12 @@
 #include "point_t.h"
 #include "tri_t.h"
 
+#define WINDOW_W 600
+#define WINDOW_H 800
+
 using namespace std;
 
-#define FLT_MIN 1.1754E-38F
-#define FLT_MAX 1.1754E+38F
-
-//for computing the center point and extent of the model
-float cx, cy, cz;
-float max_x, max_y, max_z, min_x, min_y, min_z;
-float max_extent;
-
-//other globals
+// Other globals
 int GW;
 int GH;
 int display_mode;
@@ -48,7 +43,7 @@ void ReadFile(char* filename) {
    }
 }
 
-//process the input stream from the file
+// Process the input stream from the file
 void readStream(istream& is)
 {
    char str[256];
@@ -61,12 +56,12 @@ void readStream(istream& is)
    }
 }
 
-//process each line of input save vertices and faces appropriately
+// Process each line of input save vertices and faces appropriately
 point_t * findPt(int ndx) {
    for (int i = 0; i < (int)pointList.size(); i++) {
-      //if (isNum(pointList.at(i), ndx)) {
+      if (pointList.at(i)->isNum(ndx)) {
          return pointList.at(i);
-      //}
+      }
    }
    fprintf(stderr, "Error: vertex not found.\n");
    exit(EXIT_FAILURE);
@@ -79,7 +74,7 @@ void readLine(char* str) {
    int mat;
 
    if (str[0]=='#') return;
-   //read a vertex or face
+   // Read a vertex or face
    if (str[0]=='V' && !strncmp(str,"Vertex ",7)) {
 
       if (sscanf(str,"Vertex %d %g %g %g",&vi,&x,&y,&z) !=4)
@@ -90,23 +85,11 @@ void readLine(char* str) {
 #endif
       }
 
-      //TODO allocate an object to store the vertex or face
-      //store the vertex in a collection
+      // Store the vertex in a collection
       point_t *newPt = new point_t(vi, x, y, z);
-      //*newPt = {vi, x, y, z};
       pointList.push_back(newPt);
-
-
-      //This code is house keeping to display in center of the scene
-      cx += x;
-      cy += y;
-      cz += z;
-      if (x > max_x) max_x = x; if (x < min_x) min_x = x;
-      if (y > max_y) max_y = y; if (y < min_y) min_y = y;
-      if (z > max_z) max_z = z; if (z < min_z) min_z = z;
    }
    else if (str[0]=='F' && !strncmp(str,"Face ",5)) {
-      //TODO allocate an object to store the vertex or face
       point_t *tmpPt1, *tmpPt2, *tmpPt3;
       tmpPt1 = tmpPt2 = tmpPt3 = NULL;
       char* s=str+4;
@@ -164,34 +147,24 @@ void readLine(char* str) {
 
 void printFirstThree() {
    printf("First 3 vertices:\n");
-   pointList.at(0)->print();
-   pointList.at(1)->print();
-   pointList.at(2)->print();
+   pointList[0]->print();
+   pointList[1]->print();
+   pointList[2]->print();
 }
 
 int main(int argc, char** argv) {
-   // Initialization
-   max_x = max_y = max_z = FLT_MIN;
-   min_x = min_y = min_z = FLT_MAX;
-   cx = cy = cz = 0;
-   max_extent = 1.0;
    // Make sure a file to read is specified
    if (argc > 1) {
       printf("Using file %s\n", argv[1]);
       // Read in the mesh file specified
       ReadFile(argv[1]);
+      // Convert triangle coordinates from world to screen.
+      for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
+      {
+         triList[triNdx]->w2p(WINDOW_W, WINDOW_H);
+      }
       // Only for debugging
       printFirstThree();
-
-      // Once the file is parsed find out the maximum extent to center and scale mesh
-      max_extent = max_x - min_x;
-      if (max_y - min_y > max_extent) max_extent = max_y - min_y;
-
-      // Divide by the number of vertices you read in!!!
-
-      cx = cx/(float)triList.size();
-      cy = cy/(float)triList.size();
-      cz = cz/(float)triList.size();
    } else {
       cout << "format is: meshparser filename" << endl;
    }
