@@ -1,9 +1,18 @@
 #ifndef _FLOAT3_H
 #define _FLOAT3_H
 
+#include <stdio.h>
+
 struct float3
 {
    float v[3];
+
+   float3()
+   {
+      v[0] = 0.f;
+      v[1] = 0.f;
+      v[2] = 0.f;
+   }
 
    float3(int x, int y, int z)
    {
@@ -25,15 +34,40 @@ struct float3
 
    inline float z() {return v[2];}
 
-   const float3 operator -(const float3& other)
+   inline const float3 operator -(const float3& p)
    {
-      return float3(v[0] - other.v[0],
-            v[1] - other.v[1],
-            v[2] - other.v[2]);
+      return float3(v[0] - p.v[0],
+            v[1] - p.v[1],
+            v[2] - p.v[2]);
    }
-   
-   float dot(float3 &other) {
-      return v[0] * other.v[0] + v[1] * other.v[1] + v[2] * other.v[2];
+
+   inline float dot(float3 &p)
+   {
+      return v[0] * p.v[0] + v[1] * p.v[1] + v[2] * p.v[2];
+   }
+
+   inline float3 cross(float3 &p)
+   {
+      float3 ret;
+      ret.v[0] = v[1] * p.v[2] - v[2] * p.v[1];
+      ret.v[1] = v[2] * p.v[0] - v[0] * p.v[2];
+      ret.v[2] = v[0] * p.v[1] - v[1] * p.v[0];
+      return ret;
+   }
+
+   inline void print()
+   {
+      printf("<%f %f %f>\n", v[0], v[1], v[2]);
+   }
+
+   inline void normalize()
+   {
+      float l = (float)sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
+      if (l != 0){
+         v[0] = v[0]/l;
+         v[1] = v[1]/l;
+         v[2] = v[2]/l;
+      }
    }
 };
 

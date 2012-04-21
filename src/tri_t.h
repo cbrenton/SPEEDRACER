@@ -29,9 +29,9 @@ struct tri_t
    {
       float3 p (x, y, 0);
 
-      float3 v0 = p3->toF3() - p1->toF3();
-      float3 v1 = p2->toF3() - p1->toF3();
-      float3 v2 = p - p1->toF3();
+      float3 v0 = p3->toF3Screen() - p1->toF3Screen();
+      float3 v1 = p2->toF3Screen() - p1->toF3Screen();
+      float3 v2 = p - p1->toF3Screen();
 
       float d00 = v0.dot(v0);
       float d01 = v0.dot(v1);

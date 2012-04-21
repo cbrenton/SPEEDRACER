@@ -28,6 +28,7 @@ int display_mode;
 int view_mode;
 vector<point_t *> pointList;
 vector<tri_t *> triList;
+float3 light (0, 0, 1);
 
 void convertCoords();
 void printCoords();
@@ -99,10 +100,8 @@ int main(int argc, char** argv)
 
 void convertCoords()
 {
-   //for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
    for (int pointNdx = 0; pointNdx < (int)pointList.size(); pointNdx++)
    {
-      //triList[triNdx]->w2p(width, height);
       pointList[pointNdx]->w2p(width, height);
    }
 }
@@ -120,11 +119,21 @@ void rasterize(string outName)
       {
          for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
          {
+            tri_t *tri = triList[triNdx];
             // Check for intersection.
-            if (triList[triNdx]->hit(x, y, &t) == 1)
+            if (tri->hit(x, y, &t) == 1)
             {
+               float3 ab = tri->p1->toF3World() - tri->p2->toF3World();
+               float3 ac = tri->p1->toF3World() - tri->p3->toF3World();
+               float3 normal = ab.cross(ac);
+               normal.normalize();
                // Write to file.
-               float3 color(0.f, 1.f, 0.f);
+               float colorMag = min(normal.dot(light), 1.f);
+               if (colorMag < 0)
+               {
+                  colorMag *= -1;
+               }
+               float3 color (colorMag, colorMag, colorMag);
                im->writePixel(x, y, &color);
             }
          }

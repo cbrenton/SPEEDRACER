@@ -1,5 +1,5 @@
 all:
-	+make -C ../
+	+make -j 4 -C ../
 
 eog:
 	make eog -C ../
