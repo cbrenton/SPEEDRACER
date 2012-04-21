@@ -16,14 +16,14 @@
 #include "tri_t.h"
 #include "image.h"
 
-#define WINDOW_W 800
-#define WINDOW_H 600
+#define DEFAULT_W 800
+#define DEFAULT_H 600
 
 using namespace std;
 
 // Other globals
-int GW;
-int GH;
+int width = DEFAULT_W;
+int height = DEFAULT_H;
 int display_mode;
 int view_mode;
 vector<point_t *> pointList;
@@ -31,27 +31,65 @@ vector<tri_t *> triList;
 
 void convertCoords();
 void printCoords();
-void rasterize();
+void rasterize(string outName);
 point_t * findPt(int ndx);
-void readFile(char* filename);
+void readFile(const char* filename);
 void readLine(char* str);
 void readStream(istream& is);
 
 int main(int argc, char** argv)
 {
-   // Make sure a file to read is specified
-   if (argc > 1)
+   // Get command line arguments.
+   string inFile;
+   string outFile;
+   bool inputSpecified = false;
+   bool outputSpecified = false;
+   int c;
+   while ((c = getopt(argc, argv, "h:i:o:w:")) != -1)
    {
-      printf("Using file %s\n", argv[1]);
-
+      switch (c)
+      {
+      case 'i':
+         inFile = optarg;
+         inputSpecified = true;
+         break;
+      case 'o':
+         outFile = optarg;
+         outputSpecified = true;
+         break;
+      case 'w':
+         width = atoi(optarg);
+         break;
+      case 'h':
+         height = atoi(optarg);
+         break;
+      case '?':
+         if (optopt == 'i' || optopt == 'o')
+         {
+            fprintf(stderr, "Option -%c requires a filename argument.\n",
+                  optopt);
+         }
+         break;
+      default:
+         fprintf(stderr, "?\n");
+         break;
+      }
+   }
+   // Make sure a file to read is specified
+   if (inputSpecified)
+   {
+      if (!outputSpecified)
+      {
+         outFile = "out.png";
+      }
       // Get the mesh from the specified file.
-      readFile(argv[1]);
+      readFile(inFile.c_str());
 
       // Convert triangle coordinates from world to screen.
       convertCoords();
 
       // Go SPEEDRACER GO!
-      rasterize();
+      rasterize(outFile);
    }
    else
    {
@@ -63,20 +101,20 @@ void convertCoords()
 {
    for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
    {
-      triList[triNdx]->w2p(WINDOW_W, WINDOW_H);
+      triList[triNdx]->w2p(width, height);
    }
 }
 
-void rasterize()
+void rasterize(string outName)
 {
    // Initialize the image.
-   Image *im = new Image(WINDOW_H, WINDOW_W, "out.png");
+   Image *im = new Image(height, width, outName);
 
    float t = -1.f;
    // For each pixel in the image:
-   for (int x = 0; x < WINDOW_W; x++)
+   for (int x = 0; x < width; x++)
    {
-      for (int y = 0; y < WINDOW_H; y++)
+      for (int y = 0; y < height; y++)
       {
          for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
          {
@@ -109,7 +147,7 @@ point_t * findPt(int ndx)
 }
 
 // Open the file for reading
-void readFile(char* filename)
+void readFile(const char* filename)
 {
    printf("Reading coordinates from %s\n", filename);
 

@@ -29,7 +29,11 @@ TARGET = SPEEDRACER™
 MODEL_DIR = models
 MODEL = bunny500
 MODEL_EXT = m
-ARGS = $(MODEL_DIR)/$(MODEL).$(MODEL_EXT)
+IMG_DIR = images
+IMG_EXT = png
+WIDTH = 800
+HEIGHT = 600
+ARGS = -i $(MODEL_DIR)/$(MODEL).$(MODEL_EXT) -o $(IMG_DIR)/$(MODEL).$(IMG_EXT) -w $(WIDTH) -h $(HEIGHT)
 
 # Additional linker libraries
 LIBS = $(LIBFLAGS) -lm
@@ -58,6 +62,9 @@ lib:
 
 run:
 	./$(TARGET) $(ARGS)
+
+eog:
+	eog ./$(IMG_DIR)/$(MODEL).$(IMG_EXT)
 
 gdb:
 	gdb ./$(TARGET) --args $(ARGS)

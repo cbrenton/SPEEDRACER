@@ -2,7 +2,7 @@ all:
 	+make -C ../
 
 eog:
-	eog ../out.png
+	make eog -C ../
 
 force:
 	make clean all run eog
