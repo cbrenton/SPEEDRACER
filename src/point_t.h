@@ -19,9 +19,9 @@ struct point_t
    {
    }
 
-   inline void w2p(int w, int h)
+   inline void w2p(int w, int h, float scale = 1.f)
    {
-      float dim = SCALE_FACTOR;
+      float dim = scale;
       // Convert x.
       float tmpX = x + dim; // Shift.
       pX = (int)(tmpX * (float)(w - 1) / 2 * (1.f / dim)); // Scale.

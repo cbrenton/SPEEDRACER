@@ -6,13 +6,19 @@
 #
 # License:
 # This source code can be used and/or modified without restrictions.
-# It is provided as is and the author disclaims all warranties, expressed 
+# It is provided as is and the author disclaims all warranties, expressed
 # or implied, including, without limitation, the warranties of
 # merchantability and of fitness for any purpose. The user must assume the
 # entire risk of using the Software.
 
-#CC     = g++
-CC     = nvcc
+HOST   = $(shell hostname | cut -d x -f 1)
+ifeq ($(HOST), 255)
+   CC  = nvcc
+else ifeq ($(HOST), tesla)
+   CC  = nvcc
+else
+   CC  = g++
+endif
 CP     = cp
 RM     = rm -rf
 KILL   = killall -9
@@ -35,7 +41,8 @@ IMG_DIR = images
 IMG_EXT = png
 WIDTH = 800
 HEIGHT = 600
-ARGS = -i $(MODEL_DIR)/$(MODEL).$(MODEL_EXT) -o $(IMG_DIR)/$(MODEL).$(IMG_EXT) -w $(WIDTH) -h $(HEIGHT)
+SCALE = 0.25
+ARGS = -i $(MODEL_DIR)/$(MODEL).$(MODEL_EXT) -o $(IMG_DIR)/$(MODEL).$(IMG_EXT) -w $(WIDTH) -h $(HEIGHT) -s $(SCALE)
 
 # Additional linker libraries
 LIBS = $(LIBFLAGS) -lm
@@ -51,6 +58,7 @@ OBJS = $(SRCS:.cpp=.o)
 
 # Rules for building
 all: $(TARGET)
+	@#echo $(HOST) $(CC)
 
 $(TARGET): $(OBJS) $(HEADERS)
 	$(CC) $(OBJS) $(LDFLAGS) -o $@

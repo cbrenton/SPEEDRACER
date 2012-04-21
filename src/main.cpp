@@ -19,6 +19,7 @@
 
 #define DEFAULT_W 800
 #define DEFAULT_H 600
+#define DEFAULT_OUTFILE "out.png"
 
 using namespace std;
 
@@ -30,6 +31,7 @@ int view_mode;
 vector<point_t *> pointList;
 vector<tri_t *> triList;
 float3 light (0, 0, 1);
+float scale = 1.f;
 
 void convertCoords();
 void printCoords();
@@ -47,7 +49,7 @@ int main(int argc, char** argv)
    bool inputSpecified = false;
    bool outputSpecified = false;
    int c;
-   while ((c = getopt(argc, argv, "h:i:o:w:")) != -1)
+   while ((c = getopt(argc, argv, "h:i:o:s:w:")) != -1)
    {
       switch (c)
       {
@@ -64,6 +66,9 @@ int main(int argc, char** argv)
          break;
       case 'h':
          height = atoi(optarg);
+         break;
+      case 's':
+         scale = atof(optarg);
          break;
       case '?':
          if (optopt == 'i' || optopt == 'o')
@@ -82,7 +87,7 @@ int main(int argc, char** argv)
    {
       if (!outputSpecified)
       {
-         outFile = "out.png";
+         outFile = DEFAULT_OUTFILE;
       }
       // Get the mesh from the specified file.
       readFile(inFile.c_str());
@@ -103,7 +108,7 @@ void convertCoords()
 {
    for (int pointNdx = 0; pointNdx < (int)pointList.size(); pointNdx++)
    {
-      pointList[pointNdx]->w2p(width, height);
+      pointList[pointNdx]->w2p(width, height, scale);
    }
 }
 
