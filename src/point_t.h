@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include "float3.h"
 
-#define SCALE_FACTOR 0.5
+#define SCALE_FACTOR 1.0f
 
 struct point_t
 {

@@ -15,6 +15,7 @@
 #include "point_t.h"
 #include "tri_t.h"
 #include "image.h"
+#include "zbuffer.h"
 
 #define DEFAULT_W 800
 #define DEFAULT_H 600
@@ -110,6 +111,7 @@ void rasterize(string outName)
 {
    // Initialize the image.
    Image *im = new Image(height, width, outName);
+   zbuffer *zbuf = new zbuffer(width, height);
 
    float t = -1.f;
    // For each pixel in the image:
@@ -121,24 +123,28 @@ void rasterize(string outName)
          {
             tri_t *tri = triList[triNdx];
             // Check for intersection.
-            if (tri->hit(x, y, &t) == 1)
+            if (tri->hit(x, y, &t))
             {
-               float3 ab = tri->p1->toF3World() - tri->p2->toF3World();
-               float3 ac = tri->p1->toF3World() - tri->p3->toF3World();
-               float3 normal = ab.cross(ac);
-               normal.normalize();
-               // Write to file.
-               float colorMag = min(normal.dot(light), 1.f);
-               if (colorMag < 0)
+               if (zbuf->hit(x, y, t))
                {
-                  colorMag *= -1;
+                  float3 ab = tri->p1->toF3World() - tri->p2->toF3World();
+                  float3 ac = tri->p1->toF3World() - tri->p3->toF3World();
+                  float3 normal = ab.cross(ac);
+                  normal.normalize();
+                  // Write to file.
+                  float colorMag = min(normal.dot(light), 1.f);
+                  if (colorMag < 0)
+                  {
+                     colorMag *= -1;
+                  }
+                  float3 color (colorMag, colorMag, colorMag);
+                  im->writePixel(x, y, &color);
                }
-               float3 color (colorMag, colorMag, colorMag);
-               im->writePixel(x, y, &color);
             }
          }
       }
    }
+   delete zbuf;
    im->close();
    delete im;
 }

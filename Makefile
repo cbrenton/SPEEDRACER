@@ -11,7 +11,8 @@
 # merchantability and of fitness for any purpose. The user must assume the
 # entire risk of using the Software.
 
-CC     = g++
+#CC     = g++
+CC     = nvcc
 CP     = cp
 RM     = rm -rf
 KILL   = killall -9
@@ -21,8 +22,9 @@ MAKE   = make
 IFLAGS = -I./src -I./lib -I./lib/pngwriter/include -DNO_FREETYPE -L./lib/pngwriter/lib
 LFLAGS = -lpng -lz -lpngwriter -L./lib/pngwriter/lib
 OPTIMIZE = -O3
-ERROR = -Wconversion -Werror
-CFLAGS = $(OPTIMIZE) -Wall -ggdb $(ERROR) $(IFLAGS)
+#ERROR = -Wconversion -Werror
+#CFLAGS = $(OPTIMIZE) -Wall -ggdb $(ERROR) $(IFLAGS)
+CFLAGS = $(OPTIMIZE) $(ERROR) $(IFLAGS)
 LDFLAGS = $(OPTIMIZE) $(ERROR) $(LFLAGS)
 
 TARGET = SPEEDRACER™
@@ -42,7 +44,7 @@ LIBS = $(LIBFLAGS) -lm
 # Nothing should need changing below this line
 
 # The source files
-SRCS = $(wildcard src/*.cpp) $(wildcard src/**/*.cpp)
+SRCS = $(wildcard src/*.cpp) $(wildcard src/**/*.cpp) $(wildcard src/*.cu) $(wildcard src/**/*.cu)
 HEADERS = $(wildcard src/*.h) $(wildcard src/**/*.h)
 
 OBJS = $(SRCS:.cpp=.o)
