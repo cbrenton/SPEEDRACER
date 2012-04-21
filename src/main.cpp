@@ -99,9 +99,11 @@ int main(int argc, char** argv)
 
 void convertCoords()
 {
-   for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
+   //for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
+   for (int pointNdx = 0; pointNdx < (int)pointList.size(); pointNdx++)
    {
-      triList[triNdx]->w2p(width, height);
+      //triList[triNdx]->w2p(width, height);
+      pointList[pointNdx]->w2p(width, height);
    }
 }
 
