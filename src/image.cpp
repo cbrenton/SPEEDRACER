@@ -45,10 +45,11 @@ Image::~Image()
 }
 
 //void Image::writePixel(int x, int y, const Pixel & pix)
-void Image::writePixel(int x, int y, double r, double g, double b)
+//void Image::writePixel(int x, int y, double r, double g, double b)
+void Image::writePixel(int x, int y, float3 *color)
 {
    //png->plot(x, y, pix.c.r, pix.c.g, pix.c.b);
-   png->plot(x + 1, y + 1, r, g, b);
+   png->plot(x + 1, y + 1, color->x(), color->y(), color->z());
 }
 
 void Image::close()

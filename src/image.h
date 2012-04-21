@@ -9,6 +9,7 @@
 
 #include <string>
 #include "pngwriter.h"
+#include "float3.h"
 
 using namespace std;
 
@@ -35,7 +36,8 @@ class Image
 
       // Writes a single pixel to the file.
       //void writePixel(int x, int y, const Pixel & pix) {};
-      void writePixel(int x, int y, double r, double g, double b);
+      //void writePixel(int x, int y, double r, double g, double b);
+      void writePixel(int x, int y, float3 *color);
 
       // Closes the file.
       void close();

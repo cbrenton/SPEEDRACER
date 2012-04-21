@@ -29,11 +29,87 @@ int view_mode;
 vector<point_t *> pointList;
 vector<tri_t *> triList;
 
+void convertCoords();
+void printCoords();
+void rasterize();
+point_t * findPt(int ndx);
+void readFile(char* filename);
 void readLine(char* str);
 void readStream(istream& is);
 
-//open the file for reading
-void ReadFile(char* filename)
+int main(int argc, char** argv)
+{
+   // Make sure a file to read is specified
+   if (argc > 1)
+   {
+      printf("Using file %s\n", argv[1]);
+
+      // Get the mesh from the specified file.
+      readFile(argv[1]);
+
+      // Convert triangle coordinates from world to screen.
+      convertCoords();
+
+      // Go SPEEDRACER GO!
+      rasterize();
+   }
+   else
+   {
+      cout << "format is: meshparser filename" << endl;
+   }
+}
+
+void convertCoords()
+{
+   for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
+   {
+      triList[triNdx]->w2p(WINDOW_W, WINDOW_H);
+   }
+}
+
+void rasterize()
+{
+   // Initialize the image.
+   Image *im = new Image(WINDOW_H, WINDOW_W, "out.png");
+
+   float t = -1.f;
+   // For each pixel in the image:
+   for (int x = 0; x < WINDOW_W; x++)
+   {
+      for (int y = 0; y < WINDOW_H; y++)
+      {
+         for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
+         {
+            // Check for intersection.
+            if (triList[triNdx]->hit(x, y, &t) == 1)
+            {
+               // Write to file.
+               float3 color(0.f, 1.f, 0.f);
+               im->writePixel(x, y, &color);
+            }
+         }
+      }
+   }
+   im->close();
+   delete im;
+}
+
+// Process each line of input save vertices and faces appropriately
+point_t * findPt(int ndx)
+{
+   for (int i = 0; i < (int)pointList.size(); i++)
+   {
+      if (pointList.at(i)->isNum(ndx))
+      {
+         return pointList.at(i);
+      }
+   }
+   fprintf(stderr, "Error: vertex not found.\n");
+   exit(EXIT_FAILURE);
+}
+
+// Open the file for reading
+void readFile(char* filename)
 {
    printf("Reading coordinates from %s\n", filename);
 
@@ -60,20 +136,6 @@ void readStream(istream& is)
       is.ignore(9999,'\n');
       readLine(str);
    }
-}
-
-// Process each line of input save vertices and faces appropriately
-point_t * findPt(int ndx)
-{
-   for (int i = 0; i < (int)pointList.size(); i++)
-   {
-      if (pointList.at(i)->isNum(ndx))
-      {
-         return pointList.at(i);
-      }
-   }
-   fprintf(stderr, "Error: vertex not found.\n");
-   exit(EXIT_FAILURE);
 }
 
 void readLine(char* str)
@@ -161,47 +223,5 @@ void readLine(char* str)
          }
       }
       // Store the new triangle in your face collection
-   }
-}
-
-void printFirstThree()
-{
-   printf("First 3 vertices:\n");
-   pointList[0]->print();
-   pointList[1]->print();
-   pointList[2]->print();
-}
-
-int main(int argc, char** argv)
-{
-   // Make sure a file to read is specified
-   if (argc > 1)
-   {
-      printf("Using file %s\n", argv[1]);
-      // Read in the mesh file specified
-      ReadFile(argv[1]);
-      // Convert triangle coordinates from world to screen.
-      for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
-      {
-         triList[triNdx]->w2p(WINDOW_W, WINDOW_H);
-      }
-      // Only for debugging
-      printFirstThree();
-
-      // TODO: Make this actually print something. Also use writePixel.
-      Image *im = new Image(WINDOW_H, WINDOW_W, "out.png");
-      for (int x = 0; x < WINDOW_W; x++)
-      {
-         for (int y = 0; y < WINDOW_H; y++)
-         {
-            im->writePixel(x, y, 0.5, 0.0, 0.3);
-         }
-      }
-      im->close();
-      delete im;
-   }
-   else
-   {
-      cout << "format is: meshparser filename" << endl;
    }
 }
