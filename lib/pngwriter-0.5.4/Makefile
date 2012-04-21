@@ -112,7 +112,7 @@ install:  docs
 	@ echo "#  if you are not root. To install elsewhere, compile "
 	@ echo "#  PNGwriter by giving Make the destination directory:"
 	@ echo "#"
-	@ echo "#  make DESTDIR=$HOME (for example)"
+	@ echo "#  make DESTDIR=\$HOME (for example)"
 	@ echo "#"
 	@ echo "#  Alternatively, you can change DESTDIR in 'make.include'."
 	@ echo "#"

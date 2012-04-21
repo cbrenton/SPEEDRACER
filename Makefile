@@ -18,12 +18,12 @@ KILL   = killall -9
 SHELL  = /bin/sh
 MAKE   = make
 
-IFLAGS = -I./lib -I./lib/pngwriter/include -DNO_FREETYPE
+IFLAGS = -I./src -I./lib -I./lib/pngwriter/include -DNO_FREETYPE -L./lib/pngwriter/lib
 LFLAGS = -lpng -lz -lpngwriter -L./lib/pngwriter/lib
 OPTIMIZE = -O3
 ERROR = -Wconversion -Werror
-CFLAGS = $(OPTIMIZE) -Wall -ggdb $(ERROR) $(LIBFLAGS)
-LDFLAGS = $(OPTIMIZE) $(ERROR) $(LIBFLAGS)
+CFLAGS = $(OPTIMIZE) -Wall -ggdb $(ERROR) $(IFLAGS)
+LDFLAGS = $(OPTIMIZE) $(ERROR) $(LFLAGS)
 
 TARGET = SPEEDRACER™
 MODEL_DIR = models
@@ -47,7 +47,7 @@ OBJS = $(SRCS:.cpp=.o)
 all: $(TARGET)
 
 $(TARGET): $(OBJS) $(HEADERS)
-	$(CC) $(LDFLAGS) $(OBJS) -o $@
+	$(CC) $(OBJS) $(LDFLAGS) -o $@
 
 .cpp.o:
 	$(CC) $(CFLAGS) -c $< -o $@

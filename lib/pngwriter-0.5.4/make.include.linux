@@ -18,7 +18,7 @@ P_FREETYPE = 1
 # Alternatively, when compiling, call make with the option P_FREETYPE=1
 
 
-PREFIX=../pngwriter
+PREFIX=
 
 DESTDIR=../pngwriter
 

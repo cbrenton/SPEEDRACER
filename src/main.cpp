@@ -14,9 +14,10 @@
 
 #include "point_t.h"
 #include "tri_t.h"
+#include "image.h"
 
-#define WINDOW_W 600
-#define WINDOW_H 800
+#define WINDOW_W 800
+#define WINDOW_H 600
 
 using namespace std;
 
@@ -186,6 +187,18 @@ int main(int argc, char** argv)
       }
       // Only for debugging
       printFirstThree();
+
+      // TODO: Make this actually print something. Also use writePixel.
+      Image *im = new Image(WINDOW_H, WINDOW_W, "out.png");
+      for (int x = 0; x < WINDOW_W; x++)
+      {
+         for (int y = 0; y < WINDOW_H; y++)
+         {
+            im->writePixel(x, y, 0.5, 0.0, 0.3);
+         }
+      }
+      im->close();
+      delete im;
    }
    else
    {
