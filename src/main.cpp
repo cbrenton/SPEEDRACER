@@ -37,15 +37,16 @@ int width = DEF_W;
 int height = DEF_H;
 vector<point_t *> pointList;
 vector<tri_t *> triList;
+tri_t **triArray;
 vec3 light (0, 0, 1);
 vec_t scale = 1.f;
 bool showProgress = DEF_PROGRESS;
-struct timeval startTime;
 
 void convertCoords();
+void vectorToArray();
 void printCoords();
 void rasterize(string outName);
-void rasterizePixel(vector<tri_t *> *tris, int x, int y, vec_t *z,
+void rasterizePixel(tri_t **tris, int size, int x, int y, vec_t *z,
       vec3 *color, string outName);
 point_t * findPt(int ndx);
 void readFile(const char* filename);
@@ -100,7 +101,7 @@ int main(int argc, char** argv)
    }
    
    // Set up timekeeping.
-   gettimeofday(&startTime, NULL);
+   initProgress();
 
    // Make sure a file to read is specified
    if (inputSpecified)
@@ -114,6 +115,8 @@ int main(int argc, char** argv)
 
       // Convert triangle coordinates from world to screen.
       convertCoords();
+
+      vectorToArray();
 
       // Go SPEEDRACER go!
       rasterize(outFile);
@@ -132,12 +135,24 @@ void convertCoords()
    }
 }
 
+void vectorToArray()
+{
+   triArray = new tri_t *[triList.size()];
+   for (int tri = 0; tri < (int)triList.size(); tri++)
+   {
+      triArray[tri] = triList[tri];
+   }
+}
+
 void rasterize(string outName)
 {
    // Initialize the image.
    Image *im = new Image(height, width, outName);
    zbuffer *zbuf = new zbuffer(width, height);
    colorbuffer *cbuf = new colorbuffer(width, height);
+
+   // Set the frequency of ticks to update every .01%, if possible.
+   int tick = max(width * height / 10000, 100);
 
    // For each pixel in the image:
    for (int x = 0; x < width; x++)
@@ -147,15 +162,12 @@ void rasterize(string outName)
          vec_t *z = zbuf->data[x][y];
          vec3 *color = &cbuf->data[x][y];
          // Rasterize the current pixel.
-         rasterizePixel(&triList, x, y, z, color, outName);
+         rasterizePixel(triArray, (int)triList.size(), x, y, z, color, outName);
 #ifndef _CUDA
-         // Print out progress bar.
          if (showProgress)
          {
-            // Set the frequency of ticks to update every .01%, if possible.
-            int tick = max(width * height / 10000, 100);
-            printProgress(startTime, x * height + y,
-                  width * height, tick);
+            // Print the progress bar.
+            printProgress(x * height + y, width * height, tick);
          }
 #endif
       }
@@ -169,26 +181,33 @@ void rasterize(string outName)
    delete zbuf;
 }
 
-void rasterizePixel(vector<tri_t *> *tris, int x, int y, vec_t *z,
+void rasterizePixel(tri_t **tris, int size, int x, int y, vec_t *z,
       vec3 *color, string outName)
 {
-   for (int triNdx = 0; triNdx < (int)tris->size(); triNdx++)
+   for (int triNdx = 0; triNdx < size; triNdx++)
    {
-      tri_t *tri = tris->at(triNdx);
+      tri_t *tri = tris[triNdx];
       // Check for intersection.
       vec_t t = -1.f;
-      if (tri->hit(x, y, &t))
+      vec3 bary;
+      if (tri->hit(x, y, &t, &bary))
       {
          // Check the z-buffer to see if this should be written.
          if (t < *z)
          {
             // Calculate the normal.
-            vec3 ab = tri->pt[0]->toF3World() - tri->pt[1]->toF3World();
-            vec3 ac = tri->pt[0]->toF3World() - tri->pt[2]->toF3World();
-            vec3 normal = ab.cross(ac);
-            normal.normalize();
+            vec3 *triNormal = tri->normal;
+            vec3 *normal;
+            if (tri->perVert)
+            {
+               normal = tri->getNormal(&bary);
+            }
+            else
+            {
+               normal = triNormal;
+            }
             // Calculate the color (N dot L).
-            vec_t colorMag = normal.dot(light);
+            vec_t colorMag = normal->dot(light);
             if (colorMag < 0)
             {
                colorMag *= -1.f;
@@ -197,8 +216,19 @@ void rasterizePixel(vector<tri_t *> *tris, int x, int y, vec_t *z,
             colorMag = max((vec_t)0.f, min(colorMag, (vec_t)1.f));
             // Write to color buffer.
             color->v[0] = color->v[1] = color->v[2] = colorMag;
+            /*
+            for (int i = 0; i < 3; i++)
+            {
+               color->v[i] = normal->v[i];
+            }
+            */
             // Write to z-buffer.
             *z = t;
+            // Clean up if a new normal vector was created.
+            if (tri->perVert)
+            {
+               delete normal;
+            }
          }
       }
    }

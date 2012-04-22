@@ -10,23 +10,65 @@
 struct tri_t
 {
    point_t **pt;
+   vec3 *normal;
+   bool perVert;
 
    tri_t()
    {
+      perVert = false;
       pt = new point_t*[3];
+      if (perVert)
+         normal = new vec3();
+      else
+         normal = new vec3[3];
+      genNormal();
    }
 
    tri_t(point_t *_p1, point_t *_p2, point_t *_p3)
    {
+      perVert = false;
       pt = new point_t*[3];
       pt[0] = _p1;
       pt[1] = _p2;
       pt[2] = _p3;
+      if (perVert)
+         normal = new vec3();
+      else
+         normal = new vec3[3];
+      genNormal();
    }
 
    ~tri_t()
    {
       delete [] pt;
+   }
+
+   inline void genNormal()
+   {
+      if (!perVert)
+      {
+         // Calculate the normal.
+         vec3 ab = pt[0]->toF3World() - pt[1]->toF3World();
+         vec3 ac = pt[0]->toF3World() - pt[2]->toF3World();
+         *normal = ab.cross(ac);
+         normal->normalize();
+      }
+      else
+      {
+         normal[0] = vec3(1.f, 0.f, 0.f);
+         normal[1] = vec3(0.f, 1.f, 0.f);
+         normal[2] = vec3(0.f, 0.f, 1.f);
+      }
+   }
+
+   inline vec3 * getNormal(vec3 *bary)
+   {
+      vec3 *ret = new vec3();
+      for (int i = 0; i < 3; i++)
+      {
+         ret->v[i] = normal->v[i] * bary->v[i];
+      }
+      return ret;
    }
 
    inline void w2p(int w, int h)
@@ -37,7 +79,7 @@ struct tri_t
       }
    }
 
-   bool hit(int x, int y, vec_t *t)
+   bool hit(int x, int y, vec_t *t, vec3 *bary = NULL)
    {
       bool hit = true;
 
@@ -101,6 +143,12 @@ struct tri_t
       {
          *t = bT * pt[0]->coords.v[2] + bBeta * pt[1]->coords.v[2] + bGamma *
             pt[2]->coords.v[2];
+         if (bary)
+         {
+            bary->v[0] = bT;
+            bary->v[1] = bBeta;
+            bary->v[2] = bGamma;
+         }
       }
       return hit;
    }

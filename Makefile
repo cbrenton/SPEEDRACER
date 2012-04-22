@@ -21,7 +21,7 @@ else ifeq ($(HOST), tesla)
 else
    CC  = g++
    ERROR = -Wconversion -Werror
-   CFLAGS = $(OPTIMIZE) -Wall -ggdb $(ERROR) $(IFLAGS)
+   DEBUG = -Wall -ggdb
 endif
 CP     = cp
 RM     = rm -rf
@@ -33,11 +33,14 @@ IFLAGS = -I./src -I./lib -I./lib/pngwriter/include -DNO_FREETYPE -L./lib/pngwrit
 LFLAGS = -lpng -lz -lpngwriter -L./lib/pngwriter/lib
 OPTIMIZE = -O3
 #FLOAT = -D_USEDBL
-CFLAGS = $(OPTIMIZE) $(ERROR) $(IFLAGS) $(CUDA) $(FLOAT)
-LDFLAGS = $(OPTIMIZE) $(ERROR) $(LFLAGS)
+CFLAGS = $(OPTIMIZE) $(DEBUG) $(ERROR) $(IFLAGS) $(CUDA) $(FLOAT)
+LDFLAGS = $(OPTIMIZE) $(DEBUG) $(ERROR) $(LFLAGS)
+
+MAKEFLAGS = " -j4 "
 
 TARGET = SPEEDRACER™
 MODEL_DIR = models
+#MODEL = bunny500
 MODEL = bunny10k
 #MODEL = test
 MODEL_EXT = m
@@ -80,8 +83,14 @@ run:
 eog:
 	eog ./$(IMG_DIR)/$(MODEL).$(IMG_EXT)
 
+test:
+	@make run && make eog
+
+force:
+	@make clean && make all
+
 gdb:
-	gdb ./$(TARGET) --args $(ARGS)
+	gdb ./$(TARGET)  --args $(ARGS)
 
 valgrind:
 	valgrind --tool=memcheck --leak-check=full ./$(TARGET) $(ARGS)
