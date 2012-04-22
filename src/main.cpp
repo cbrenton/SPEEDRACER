@@ -129,17 +129,18 @@ void rasterize(string outName)
       for (int y = 0; y < height; y++)
       {
          vec_t *z = zbuf->data[x][y];
-         //vec3 &color = cbuf->data[x][y];
          vec3 *color = &cbuf->data[x][y];
          // Rasterize the current pixel.
          rasterizePixel(&triList, x, y, z, color, outName);
       }
    }
+   // Write the color buffer to the image file.
    im->write(cbuf);
-   delete cbuf;
-   delete zbuf;
+   // Close image and clean up.
    im->close();
    delete im;
+   delete cbuf;
+   delete zbuf;
 }
 
 void rasterizePixel(vector<tri_t *> *tris, int x, int y, vec_t *z,

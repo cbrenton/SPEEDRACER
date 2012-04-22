@@ -26,7 +26,7 @@ struct tri_t
 
    ~tri_t()
    {
-      ;
+      delete [] pt;
    }
 
    inline void w2p(int w, int h)
