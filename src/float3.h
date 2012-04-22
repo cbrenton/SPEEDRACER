@@ -1,54 +1,65 @@
-#ifndef _FLOAT3_H
-#define _FLOAT3_H
+#ifndef _vec3_H
+#define _vec3_H
 
 #include <stdio.h>
+#include <float.h>
 
-struct float3
+#ifdef _USEDBL
+#define Z_INF DBL_MAX
+
+typedef double vec_t;
+#else
+#define Z_INF FLT_MAX
+
+typedef float vec_t;
+#endif
+
+struct vec3
 {
-   float v[3];
+   vec_t v[3];
 
-   float3()
+   vec3()
    {
       v[0] = 0.f;
       v[1] = 0.f;
       v[2] = 0.f;
    }
 
-   float3(int x, int y, int z)
+   vec3(int x, int y, int z)
    {
-      v[0] = (float)x;
-      v[1] = (float)y;
-      v[2] = (float)z;
+      v[0] = (vec_t)x;
+      v[1] = (vec_t)y;
+      v[2] = (vec_t)z;
    }
 
-   float3(float x, float y, float z)
+   vec3(vec_t x, vec_t y, vec_t z)
    {
       v[0] = x;
       v[1] = y;
       v[2] = z;
    }
 
-   inline float x() {return v[0];}
+   inline vec_t x() {return v[0];}
 
-   inline float y() {return v[1];}
+   inline vec_t y() {return v[1];}
 
-   inline float z() {return v[2];}
+   inline vec_t z() {return v[2];}
 
-   inline const float3 operator -(const float3& p)
+   inline const vec3 operator -(const vec3& p)
    {
-      return float3(v[0] - p.v[0],
+      return vec3(v[0] - p.v[0],
             v[1] - p.v[1],
             v[2] - p.v[2]);
    }
 
-   inline float dot(float3 &p)
+   inline vec_t dot(vec3 &p)
    {
       return v[0] * p.v[0] + v[1] * p.v[1] + v[2] * p.v[2];
    }
 
-   inline float3 cross(float3 &p)
+   inline vec3 cross(vec3 &p)
    {
-      float3 ret;
+      vec3 ret;
       ret.v[0] = v[1] * p.v[2] - v[2] * p.v[1];
       ret.v[1] = v[2] * p.v[0] - v[0] * p.v[2];
       ret.v[2] = v[0] * p.v[1] - v[1] * p.v[0];
@@ -62,7 +73,7 @@ struct float3
 
    inline void normalize()
    {
-      float l = (float)sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
+      vec_t l = (vec_t)sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
       if (l != 0){
          v[0] = v[0]/l;
          v[1] = v[1]/l;

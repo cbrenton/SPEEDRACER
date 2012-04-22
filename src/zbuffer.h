@@ -1,25 +1,23 @@
 #ifndef _ZBUFFER_H
 #define _ZBUFFER_H
 
-#include <float.h>
-
-#define Z_INF FLT_MAX
+#include "vec3.h"
 
 struct zbuffer
 {
    int w, h;
-   float ***data;
+   vec_t ***data;
 
    zbuffer(int _w, int _h) :
       w(_w), h(_h)
    {
-      data = new float**[w];
+      data = new vec_t**[w];
       for (int i = 0; i < w; i++)
       {
-         data[i] = new float*[h];
+         data[i] = new vec_t*[h];
          for (int j = 0; j < h; j++)
          {
-            data[i][j] = new float;
+            data[i][j] = new vec_t;
             *data[i][j] = Z_INF;
          }
       }
@@ -38,7 +36,7 @@ struct zbuffer
       delete [] data;
    }
 
-   bool hit(int x, int y, float t)
+   bool hit(int x, int y, vec_t t)
    {
       if (*data[x][y] != Z_INF && t >= *data[x][y])
       {

@@ -3,7 +3,7 @@
 
 #include "mat_t.h"
 #include "point_t.h"
-#include "float3.h"
+#include "vec3.h"
 
 #define EPSILON 0.001f
 
@@ -25,22 +25,22 @@ struct tri_t
       p3->w2p(w, h);
    }
 
-   bool hit(int x, int y, float *t)
+   bool hit(int x, int y, vec_t *t)
    {
       bool hit = true;
 
-      float bBeta, bGamma, bT;
+      vec_t bBeta, bGamma, bT;
 
-      float3 pix (x, y, 0);
-      float3 pt1 = p1->toF3Screen();
-      float3 pt2 = p2->toF3Screen();
-      float3 pt3 = p3->toF3Screen();
+      vec3 pix (x, y, 0);
+      vec3 pt1 = p1->toF3Screen();
+      vec3 pt2 = p2->toF3Screen();
+      vec3 pt3 = p3->toF3Screen();
 
       mat_t A (pt1.x(), pt2.x(), pt3.x(),
             pt1.y(), pt2.y(), pt3.y(),
             1.f, 1.f, 1.f);
 
-      float detA = A.det();
+      vec_t detA = A.det();
       if (detA == 0)
       {
          return false;

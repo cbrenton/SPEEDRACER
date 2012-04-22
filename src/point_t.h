@@ -2,32 +2,32 @@
 #define _POINT_T_H
 
 #include <stdio.h>
-#include "float3.h"
+#include "vec3.h"
 
 #define SCALE_FACTOR 1.0f
 
 struct point_t
 {
    int index; // The index of this point.
-   float x, y, z; // The coordinates of the point in 3D space.
+   vec_t x, y, z; // The coordinates of the point in 3D space.
    int pX, pY; // The screen coordinates of this point.
 
    point_t() {};
 
-   point_t(int _index, float _x, float _y, float _z) :
+   point_t(int _index, vec_t _x, vec_t _y, vec_t _z) :
       index(_index), x(_x), y(_y), z(_z)
    {
    }
 
-   inline void w2p(int w, int h, float scale = 1.f)
+   inline void w2p(int w, int h, vec_t scale = (vec_t)1.0)
    {
-      float dim = scale;
+      vec_t dim = scale;
       // Convert x.
-      float tmpX = x + dim; // Shift.
-      pX = (int)(tmpX * (float)(w - 1) / 2 * (1.f / dim)); // Scale.
+      vec_t tmpX = x + dim; // Shift.
+      pX = (int)(tmpX * (vec_t)(w - 1) / 2 * ((vec_t)1.0 / dim)); // Scale.
       // Convert y.
-      float tmpY = y + dim; // Shift.
-      pY = (int)(tmpY * (float)(h - 1) / 2 * (1.f / dim)); // Scale.
+      vec_t tmpY = y + dim; // Shift.
+      pY = (int)(tmpY * (vec_t)(h - 1) / 2 * ((vec_t)1.0 / dim)); // Scale.
    }
 
    inline bool isNum(int check)
@@ -35,14 +35,14 @@ struct point_t
       return (index == check);
    }
 
-   float3 toF3Screen()
+   vec3 toF3Screen()
    {
-      return float3(pX, pY, 0);
+      return vec3(pX, pY, 0);
    }
 
-   float3 toF3World()
+   vec3 toF3World()
    {
-      return float3(x, y, z);
+      return vec3(x, y, z);
    }
    
    inline void print(bool world = false)

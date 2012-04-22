@@ -9,7 +9,7 @@
 
 #include <string>
 #include "pngwriter.h"
-#include "float3.h"
+#include "vec3.h"
 #include "colorbuffer.h"
 
 using namespace std;
@@ -30,14 +30,11 @@ class Image
       // The name of the file to be output (minus the file extension).
       string filename;
 
-      // The pixel data currently stored in the image.
-      //Pixel **pixelData;
-
       // Writes a color buffer to the file.
       void write(colorbuffer *buf);
 
       // Writes a single pixel to the file.
-      void writePixel(int x, int y, float3 *color);
+      void writePixel(int x, int y, vec3 *color);
 
       // Closes the file.
       void close();

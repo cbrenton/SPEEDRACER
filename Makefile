@@ -18,6 +18,8 @@ else ifeq ($(HOST), tesla)
    CC  = nvcc
 else
    CC  = g++
+   ERROR = -Wconversion -Werror
+   CFLAGS = $(OPTIMIZE) -Wall -ggdb $(ERROR) $(IFLAGS)
 endif
 CP     = cp
 RM     = rm -rf
@@ -28,9 +30,8 @@ MAKE   = make
 IFLAGS = -I./src -I./lib -I./lib/pngwriter/include -DNO_FREETYPE -L./lib/pngwriter/lib
 LFLAGS = -lpng -lz -lpngwriter -L./lib/pngwriter/lib
 OPTIMIZE = -O3
-#ERROR = -Wconversion -Werror
-#CFLAGS = $(OPTIMIZE) -Wall -ggdb $(ERROR) $(IFLAGS)
-CFLAGS = $(OPTIMIZE) $(ERROR) $(IFLAGS)
+#FLOAT = -D_USEDBL
+CFLAGS = $(OPTIMIZE) $(ERROR) $(IFLAGS) $(FLOAT)
 LDFLAGS = $(OPTIMIZE) $(ERROR) $(LFLAGS)
 
 TARGET = SPEEDRACER™

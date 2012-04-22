@@ -1,20 +1,20 @@
 #ifndef _COLORBUFFER_H
 #define _COLORBUFFER_H
 
-#include "float3.h"
+#include "vec3.h"
 
 struct colorbuffer
 {
    int w, h;
-   float3 **data;
+   vec3 **data;
 
    colorbuffer(int _w, int _h) :
       w(_w), h(_h)
    {
-      data = new float3*[w];
+      data = new vec3*[w];
       for (int i = 0; i < w; i++)
       {
-         data[i] = new float3[h];
+         data[i] = new vec3[h];
       }
    }
 

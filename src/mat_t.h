@@ -1,28 +1,30 @@
 #ifndef _MAT_T_H
 #define _MAT_T_H
 
+#include "vec3.h"
+
 struct mat_t
 {
-   float data[3][3];
+   vec_t data[3][3];
 
    mat_t(int n1, int n2, int n3,
          int n4, int n5, int n6,
          int n7, int n8, int n9)
    {
-      data[0][0] = (float)n1;
-      data[0][1] = (float)n2;
-      data[0][2] = (float)n3;
-      data[1][0] = (float)n4;
-      data[1][1] = (float)n5;
-      data[1][2] = (float)n6;
-      data[2][0] = (float)n7;
-      data[2][1] = (float)n8;
-      data[2][2] = (float)n9;
+      data[0][0] = (vec_t)n1;
+      data[0][1] = (vec_t)n2;
+      data[0][2] = (vec_t)n3;
+      data[1][0] = (vec_t)n4;
+      data[1][1] = (vec_t)n5;
+      data[1][2] = (vec_t)n6;
+      data[2][0] = (vec_t)n7;
+      data[2][1] = (vec_t)n8;
+      data[2][2] = (vec_t)n9;
    }
    
-   mat_t(float n1, float n2, float n3,
-         float n4, float n5, float n6,
-         float n7, float n8, float n9)
+   mat_t(vec_t n1, vec_t n2, vec_t n3,
+         vec_t n4, vec_t n5, vec_t n6,
+         vec_t n7, vec_t n8, vec_t n9)
    {
       data[0][0] = n1;
       data[0][1] = n2;
@@ -35,7 +37,7 @@ struct mat_t
       data[2][2] = n9;
    }
 
-   inline float det()
+   inline vec_t det()
    {
       return data[0][0] * data[1][1] * data[2][2] + data[0][1] * data[1][2] *
          data[2][0] + data[0][2] * data[1][0] * data[2][1] - data[0][2] *

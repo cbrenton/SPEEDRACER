@@ -17,6 +17,7 @@
 #include "image.h"
 #include "zbuffer.h"
 #include "colorbuffer.h"
+#include "vec3.h"
 
 #define DEFAULT_W 800
 #define DEFAULT_H 600
@@ -27,18 +28,16 @@ using namespace std;
 // Other globals
 int width = DEFAULT_W;
 int height = DEFAULT_H;
-int display_mode;
-int view_mode;
 vector<point_t *> pointList;
 vector<tri_t *> triList;
-float3 light (0, 0, 1);
-float scale = 1.f;
+vec3 light (0, 0, 1);
+vec_t scale = 1.f;
 
 void convertCoords();
 void printCoords();
 void rasterize(string outName);
-void rasterizePixel(vector<tri_t *> *tris, int x, int y, float *z,
-      float3 *color, string outName);
+void rasterizePixel(vector<tri_t *> *tris, int x, int y, vec_t *z,
+      vec3 *color, string outName);
 point_t * findPt(int ndx);
 void readFile(const char* filename);
 void readLine(char* str);
@@ -71,7 +70,7 @@ int main(int argc, char** argv)
          height = atoi(optarg);
          break;
       case 's':
-         scale = atof(optarg);
+         scale = (vec_t)atof(optarg);
          break;
       case '?':
          if (optopt == 'i' || optopt == 'o')
@@ -127,9 +126,9 @@ void rasterize(string outName)
    {
       for (int y = 0; y < height; y++)
       {
-         float *z = zbuf->data[x][y];
-         //float3 &color = cbuf->data[x][y];
-         float3 *color = &cbuf->data[x][y];
+         vec_t *z = zbuf->data[x][y];
+         //vec3 &color = cbuf->data[x][y];
+         vec3 *color = &cbuf->data[x][y];
          // Rasterize the current pixel.
          rasterizePixel(&triList, x, y, z, color, outName);
       }
@@ -141,32 +140,32 @@ void rasterize(string outName)
    delete im;
 }
 
-void rasterizePixel(vector<tri_t *> *tris, int x, int y, float *z,
-      float3 *color, string outName)
+void rasterizePixel(vector<tri_t *> *tris, int x, int y, vec_t *z,
+      vec3 *color, string outName)
 {
    for (int triNdx = 0; triNdx < (int)tris->size(); triNdx++)
    {
       tri_t *tri = tris->at(triNdx);
       // Check for intersection.
-      float t = -1.f;
+      vec_t t = -1.f;
       if (tri->hit(x, y, &t))
       {
          // Check the z-buffer to see if this should be written.
          if (*z == Z_INF || t < *z)
          {
             // Calculate the normal.
-            float3 ab = tri->p1->toF3World() - tri->p2->toF3World();
-            float3 ac = tri->p1->toF3World() - tri->p3->toF3World();
-            float3 normal = ab.cross(ac);
+            vec3 ab = tri->p1->toF3World() - tri->p2->toF3World();
+            vec3 ac = tri->p1->toF3World() - tri->p3->toF3World();
+            vec3 normal = ab.cross(ac);
             normal.normalize();
             // Calculate the color (N dot L).
-            float colorMag = normal.dot(light);
+            vec_t colorMag = normal.dot(light);
             if (colorMag < 0)
             {
-               colorMag *= -1;
+               colorMag *= -1.f;
             }
             // Clamp the color to (0.0, 1.0).
-            colorMag = max(0.f, min(colorMag, 1.f));
+            colorMag = max((vec_t)0.f, min(colorMag, (vec_t)1.f));
             // Write to color buffer.
             color->v[0] = color->v[1] = color->v[2] = colorMag;
             // Write to z-buffer.
@@ -223,8 +222,8 @@ void readStream(istream& is)
 void readLine(char* str)
 {
    int vi;
-   float x, y, z;
-   float r, g, b;
+   vec_t x, y, z;
+   vec_t r, g, b;
    int mat;
 
    if (str[0]=='#') return;
