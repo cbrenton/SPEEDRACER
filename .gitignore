@@ -2,3 +2,4 @@ lib/
 images/
 SPEEDRACER™
 src/*.o
+src/main.cu
