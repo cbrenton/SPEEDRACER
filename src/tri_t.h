@@ -9,20 +9,32 @@
 
 struct tri_t
 {
-   point_t *p1, *p2, *p3;
+   point_t **pt;
 
-   tri_t() {};
-
-   tri_t(point_t *_p1, point_t *_p2, point_t *_p3) :
-      p1(_p1), p2(_p2), p3(_p3)
+   tri_t()
    {
+      pt = new point_t*[3];
+   }
+
+   tri_t(point_t *_p1, point_t *_p2, point_t *_p3)
+   {
+      pt = new point_t*[3];
+      pt[0] = _p1;
+      pt[1] = _p2;
+      pt[2] = _p3;
+   }
+
+   ~tri_t()
+   {
+      ;
    }
 
    inline void w2p(int w, int h)
    {
-      p1->w2p(w, h);
-      p2->w2p(w, h);
-      p3->w2p(w, h);
+      for (int i = 0; i < 3; i++)
+      {
+         pt[i]->w2p(w, h);
+      }
    }
 
    bool hit(int x, int y, vec_t *t)
@@ -32,12 +44,14 @@ struct tri_t
       vec_t bBeta, bGamma, bT;
 
       vec3 pix (x, y, 0);
-      vec3 pt1 = p1->toF3Screen();
-      vec3 pt2 = p2->toF3Screen();
-      vec3 pt3 = p3->toF3Screen();
+      vec3 screenPt[3];
+      for (int i = 0; i < 3; i++)
+      {
+         screenPt[i] = pt[i]->toF3Screen();
+      }
 
-      mat_t A (pt1.x(), pt2.x(), pt3.x(),
-            pt1.y(), pt2.y(), pt3.y(),
+      mat_t A (screenPt[0].x(), screenPt[1].x(), screenPt[2].x(),
+            screenPt[0].y(), screenPt[1].y(), screenPt[2].y(),
             1.f, 1.f, 1.f);
 
       vec_t detA = A.det();
@@ -46,8 +60,8 @@ struct tri_t
          return false;
       }
 
-      mat_t baryT (pix.x(), pt2.x(), pt3.x(),
-            pix.y(), pt2.y(), pt3.y(),
+      mat_t baryT (pix.x(), screenPt[1].x(), screenPt[2].x(),
+            pix.y(), screenPt[1].y(), screenPt[2].y(),
             1.f, 1.f, 1.f);
 
       bT = baryT.det() / detA;
@@ -58,8 +72,8 @@ struct tri_t
       }
       else
       {
-         mat_t baryGamma (pt1.x(), pix.x(), pt3.x(),
-               pt1.y(), pix.y(), pt3.y(),
+         mat_t baryGamma (screenPt[0].x(), pix.x(), screenPt[2].x(),
+               screenPt[0].y(), pix.y(), screenPt[2].y(),
                1.f, 1.f, 1.f);
 
          bGamma = baryGamma.det() / detA;
@@ -70,8 +84,8 @@ struct tri_t
          }
          else
          {
-            mat_t baryBeta (pt1.x(), pt2.x(), pix.x(),
-                  pt1.y(), pt2.y(), pix.y(),
+            mat_t baryBeta (screenPt[0].x(), screenPt[1].x(), pix.x(),
+                  screenPt[0].y(), screenPt[1].y(), pix.y(),
                   1.f, 1.f, 1.f);
 
             bBeta = baryBeta.det() / detA;
@@ -85,8 +99,8 @@ struct tri_t
 
       if (hit)
       {
-         *t = bT * p1->coords.v[2] + bBeta * p2->coords.v[2] + bGamma *
-            p3->coords.v[2];
+         *t = bT * pt[0]->coords.v[2] + bBeta * pt[1]->coords.v[2] + bGamma *
+            pt[2]->coords.v[2];
       }
       return hit;
    }

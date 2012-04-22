@@ -156,8 +156,8 @@ void rasterizePixel(vector<tri_t *> *tris, int x, int y, vec_t *z,
          if (t < *z)
          {
             // Calculate the normal.
-            vec3 ab = tri->p1->toF3World() - tri->p2->toF3World();
-            vec3 ac = tri->p1->toF3World() - tri->p3->toF3World();
+            vec3 ab = tri->pt[0]->toF3World() - tri->pt[1]->toF3World();
+            vec3 ac = tri->pt[0]->toF3World() - tri->pt[2]->toF3World();
             vec3 normal = ab.cross(ac);
             normal.normalize();
             // Calculate the color (N dot L).
