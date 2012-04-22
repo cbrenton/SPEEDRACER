@@ -1,5 +1,5 @@
-#ifndef __TRI_T_H
-#define __TRI_T_H
+#ifndef _TRI_T_H
+#define _TRI_T_H
 
 #include "mat_t.h"
 #include "point_t.h"

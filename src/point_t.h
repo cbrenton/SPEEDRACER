@@ -1,5 +1,5 @@
-#ifndef __POINT_T_H
-#define __POINT_T_H
+#ifndef _POINT_T_H
+#define _POINT_T_H
 
 #include <stdio.h>
 #include "float3.h"

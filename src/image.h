@@ -10,10 +10,9 @@
 #include <string>
 #include "pngwriter.h"
 #include "float3.h"
+#include "colorbuffer.h"
 
 using namespace std;
-
-//class Pixel;
 
 class Image
 {
@@ -34,9 +33,10 @@ class Image
       // The pixel data currently stored in the image.
       //Pixel **pixelData;
 
+      // Writes a color buffer to the file.
+      void write(colorbuffer *buf);
+
       // Writes a single pixel to the file.
-      //void writePixel(int x, int y, const Pixel & pix) {};
-      //void writePixel(int x, int y, double r, double g, double b);
       void writePixel(int x, int y, float3 *color);
 
       // Closes the file.

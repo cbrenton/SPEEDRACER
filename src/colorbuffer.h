@@ -15,10 +15,6 @@ struct colorbuffer
       for (int i = 0; i < w; i++)
       {
          data[i] = new float3[h];
-         for (int j = 0; j < h; j++)
-         {
-            //data[i][j] = Z_INF;
-         }
       }
    }
 

@@ -16,6 +16,7 @@
 #include "tri_t.h"
 #include "image.h"
 #include "zbuffer.h"
+#include "colorbuffer.h"
 
 #define DEFAULT_W 800
 #define DEFAULT_H 600
@@ -36,6 +37,8 @@ float scale = 1.f;
 void convertCoords();
 void printCoords();
 void rasterize(string outName);
+void rasterizePixel(vector<tri_t *> *tris, int x, int y, float *z,
+      float3 *color, string outName);
 point_t * findPt(int ndx);
 void readFile(const char* filename);
 void readLine(char* str);
@@ -117,41 +120,60 @@ void rasterize(string outName)
    // Initialize the image.
    Image *im = new Image(height, width, outName);
    zbuffer *zbuf = new zbuffer(width, height);
+   colorbuffer *cbuf = new colorbuffer(width, height);
 
-   float t = -1.f;
    // For each pixel in the image:
    for (int x = 0; x < width; x++)
    {
       for (int y = 0; y < height; y++)
       {
-         for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
-         {
-            tri_t *tri = triList[triNdx];
-            // Check for intersection.
-            if (tri->hit(x, y, &t))
-            {
-               if (zbuf->hit(x, y, t))
-               {
-                  float3 ab = tri->p1->toF3World() - tri->p2->toF3World();
-                  float3 ac = tri->p1->toF3World() - tri->p3->toF3World();
-                  float3 normal = ab.cross(ac);
-                  normal.normalize();
-                  // Write to file.
-                  float colorMag = min(normal.dot(light), 1.f);
-                  if (colorMag < 0)
-                  {
-                     colorMag *= -1;
-                  }
-                  float3 color (colorMag, colorMag, colorMag);
-                  im->writePixel(x, y, &color);
-               }
-            }
-         }
+         float *z = zbuf->data[x][y];
+         //float3 &color = cbuf->data[x][y];
+         float3 *color = &cbuf->data[x][y];
+         // Rasterize the current pixel.
+         rasterizePixel(&triList, x, y, z, color, outName);
       }
    }
+   im->write(cbuf);
+   delete cbuf;
    delete zbuf;
    im->close();
    delete im;
+}
+
+void rasterizePixel(vector<tri_t *> *tris, int x, int y, float *z,
+      float3 *color, string outName)
+{
+   for (int triNdx = 0; triNdx < (int)tris->size(); triNdx++)
+   {
+      tri_t *tri = tris->at(triNdx);
+      // Check for intersection.
+      float t = -1.f;
+      if (tri->hit(x, y, &t))
+      {
+         // Check the z-buffer to see if this should be written.
+         if (*z == Z_INF || t < *z)
+         {
+            // Calculate the normal.
+            float3 ab = tri->p1->toF3World() - tri->p2->toF3World();
+            float3 ac = tri->p1->toF3World() - tri->p3->toF3World();
+            float3 normal = ab.cross(ac);
+            normal.normalize();
+            // Calculate the color (N dot L).
+            float colorMag = normal.dot(light);
+            if (colorMag < 0)
+            {
+               colorMag *= -1;
+            }
+            // Clamp the color to (0.0, 1.0).
+            colorMag = max(0.f, min(colorMag, 1.f));
+            // Write to color buffer.
+            color->v[0] = color->v[1] = color->v[2] = colorMag;
+            // Write to z-buffer.
+            *z = t;
+         }
+      }
+   }
 }
 
 // Process each line of input save vertices and faces appropriately
@@ -259,6 +281,7 @@ void readLine(char* str)
             // Store the third vertex in your face object
             tmpPt3 = findPt(j);
             tri_t *newTri = new tri_t(tmpPt1, tmpPt2, tmpPt3);
+            // Store the new triangle in your face collection
             triList.push_back(newTri);
          }
          // If there is more data to process break out
@@ -282,6 +305,5 @@ void readLine(char* str)
             }
          }
       }
-      // Store the new triangle in your face collection
    }
 }

@@ -6,27 +6,12 @@
 
 #include <iostream>
 #include "image.h"
-//#include "Pixel.h"
-//#include "Globals.h"
 
 using namespace std;
 
 Image::Image(int w, int h, string name) :
    width(w), height(h)
 {
-   /*
-   // Initialize pixelData.
-   pixelData = new Pixel*[width];
-   for (int x = 0; x < width; x++)
-   {
-   pixelData[x] = new Pixel[height];
-   for (int y = 0; y < height; y++)
-   {
-   pixelData[x][y] = Pixel(0.0, 0.0, 0.0);
-   }
-   }
-   */
-
    filename = name;
    cout << "filename: " << filename << endl;
    png = new pngwriter(height, width, 0, filename.c_str());
@@ -35,20 +20,21 @@ Image::Image(int w, int h, string name) :
 Image::~Image()
 {
    delete png;
-   /*
-   // Delete pixelData.
-   for (int x = 0; x < width; x++)
-   {
-      delete[] pixelData[width];
-   }
-   */
 }
 
-//void Image::writePixel(int x, int y, const Pixel & pix)
-//void Image::writePixel(int x, int y, double r, double g, double b)
+void Image::write(colorbuffer *buf)
+{
+   for (int x = 0; x < buf->w; x++)
+   {
+      for (int y = 0; y < buf->h; y++)
+      {
+         writePixel(x, y, &buf->data[x][y]);
+      }
+   }
+}
+
 void Image::writePixel(int x, int y, float3 *color)
 {
-   //png->plot(x, y, pix.c.r, pix.c.g, pix.c.b);
    png->plot(x + 1, y + 1, color->x(), color->y(), color->z());
 }
 
