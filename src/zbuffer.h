@@ -1,6 +1,7 @@
 #ifndef _ZBUFFER_H
 #define _ZBUFFER_H
 
+#include <float.h>
 #include "vec3.h"
 
 struct zbuffer
@@ -18,7 +19,7 @@ struct zbuffer
          for (int j = 0; j < h; j++)
          {
             data[i][j] = new vec_t;
-            *data[i][j] = Z_INF;
+            *data[i][j] = FLT_MAX;
          }
       }
    }
@@ -38,7 +39,7 @@ struct zbuffer
 
    bool hit(int x, int y, vec_t t)
    {
-      if (*data[x][y] != Z_INF && t >= *data[x][y])
+      if (t >= *data[x][y])
       {
          return false;
       }

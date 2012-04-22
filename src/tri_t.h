@@ -85,7 +85,8 @@ struct tri_t
 
       if (hit)
       {
-         *t = bT * p1->z + bBeta * p2->z + bGamma * p3->z;
+         *t = bT * p1->coords.v[2] + bBeta * p2->coords.v[2] + bGamma *
+            p3->coords.v[2];
       }
       return hit;
    }

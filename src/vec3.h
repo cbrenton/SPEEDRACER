@@ -2,15 +2,10 @@
 #define _vec3_H
 
 #include <stdio.h>
-#include <float.h>
 
 #ifdef _USEDBL
-#define Z_INF DBL_MAX
-
 typedef double vec_t;
 #else
-#define Z_INF FLT_MAX
-
 typedef float vec_t;
 #endif
 

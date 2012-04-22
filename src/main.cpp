@@ -31,7 +31,8 @@ int height = DEFAULT_H;
 vector<point_t *> pointList;
 vector<tri_t *> triList;
 vec3 light (0, 0, 1);
-vec_t scale = 1.f;
+//vec_t scale = 1.f;
+float scale = 1.f;
 
 void convertCoords();
 void printCoords();
@@ -70,7 +71,8 @@ int main(int argc, char** argv)
          height = atoi(optarg);
          break;
       case 's':
-         scale = (vec_t)atof(optarg);
+         //scale = (vec_t)atof(optarg);
+         scale = (float)atof(optarg);
          break;
       case '?':
          if (optopt == 'i' || optopt == 'o')
@@ -151,7 +153,7 @@ void rasterizePixel(vector<tri_t *> *tris, int x, int y, vec_t *z,
       if (tri->hit(x, y, &t))
       {
          // Check the z-buffer to see if this should be written.
-         if (*z == Z_INF || t < *z)
+         if (t < *z)
          {
             // Calculate the normal.
             vec3 ab = tri->p1->toF3World() - tri->p2->toF3World();

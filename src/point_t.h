@@ -9,24 +9,27 @@
 struct point_t
 {
    int index; // The index of this point.
-   vec_t x, y, z; // The coordinates of the point in 3D space.
+   vec3 coords; // The coordinates of the point in 3D space.
    int pX, pY; // The screen coordinates of this point.
 
    point_t() {};
 
    point_t(int _index, vec_t _x, vec_t _y, vec_t _z) :
-      index(_index), x(_x), y(_y), z(_z)
+      index(_index)
    {
+      coords.v[0] = _x;
+      coords.v[1] = _y;
+      coords.v[2] = _z;
    }
 
    inline void w2p(int w, int h, vec_t scale = (vec_t)1.0)
    {
       vec_t dim = scale;
       // Convert x.
-      vec_t tmpX = x + dim; // Shift.
+      vec_t tmpX = coords.v[0] + dim; // Shift.
       pX = (int)(tmpX * (vec_t)(w - 1) / 2 * ((vec_t)1.0 / dim)); // Scale.
       // Convert y.
-      vec_t tmpY = y + dim; // Shift.
+      vec_t tmpY = coords.v[1] + dim; // Shift.
       pY = (int)(tmpY * (vec_t)(h - 1) / 2 * ((vec_t)1.0 / dim)); // Scale.
    }
 
@@ -42,7 +45,7 @@ struct point_t
 
    vec3 toF3World()
    {
-      return vec3(x, y, z);
+      return coords;
    }
    
    inline void print(bool world = false)
@@ -50,7 +53,7 @@ struct point_t
       //if (!isConverted || world)
       if (world)
       {
-         printf("\t%d: %f %f %f\n", index, x, y, z);
+         printf("\t%d: %f %f %f\n", index, coords.v[0], coords.v[1], coords.v[2]);
       }
       else
       {

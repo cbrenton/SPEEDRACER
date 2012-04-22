@@ -37,6 +37,7 @@ LDFLAGS = $(OPTIMIZE) $(ERROR) $(LFLAGS)
 TARGET = SPEEDRACER™
 MODEL_DIR = models
 MODEL = bunny500
+#MODEL = test
 MODEL_EXT = m
 IMG_DIR = images
 IMG_EXT = png
