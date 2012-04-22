@@ -1,38 +1,46 @@
-//basic program to read in a mesh file (of .m format from H. Hoppe)
-//Hh code modified by ZJW for csc 471
-
-//Fall 2010 - base code for lab on 'drawing' a 3d model - students must define the objects to store the mesh and the draw routines before prog 3
-
-#include <stdio.h>
-#include <math.h>
-#include <stdlib.h>
-#include <vector>
-#include <iostream>
-#include <fstream>
+/**
+ * SPEEDRACER: A software rasterizer created for Zoe Wood's CSC 572 class
+ *    in conjunction with Chris Lupo's CPE 458 class.
+ * @authors Chris Brenton, David Burke
+ * @date Spring 2012
+ *
+ * GO SPEEDRACER GO!
+ */
 #include <assert.h>
+#include <fstream>
+#include <iostream>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
+#include <vector>
 
-#include "point_t.h"
-#include "tri_t.h"
-#include "image.h"
-#include "zbuffer.h"
 #include "colorbuffer.h"
+#include "image.h"
+#include "point_t.h"
+#include "progress.h"
+#include "tri_t.h"
 #include "vec3.h"
+#include "zbuffer.h"
 
-#define DEFAULT_W 800
-#define DEFAULT_H 600
-#define DEFAULT_OUTFILE "out.png"
+// Default values.
+#define DEF_W 800
+#define DEF_H 600
+#define DEF_OUTFILE "out.png"
+#define DEF_SCALE
+#define DEF_PROGRESS true
 
 using namespace std;
 
-// Other globals
-int width = DEFAULT_W;
-int height = DEFAULT_H;
+int width = DEF_W;
+int height = DEF_H;
 vector<point_t *> pointList;
 vector<tri_t *> triList;
 vec3 light (0, 0, 1);
-//vec_t scale = 1.f;
-float scale = 1.f;
+vec_t scale = 1.f;
+bool showProgress = DEF_PROGRESS;
+struct timeval startTime;
 
 void convertCoords();
 void printCoords();
@@ -46,13 +54,15 @@ void readStream(istream& is);
 
 int main(int argc, char** argv)
 {
-   // Get command line arguments.
+   // Initialize.
    string inFile;
    string outFile;
    bool inputSpecified = false;
    bool outputSpecified = false;
    int c;
-   while ((c = getopt(argc, argv, "h:i:o:s:w:")) != -1)
+
+   // Get command line arguments.
+   while ((c = getopt(argc, argv, "h:i:o:ps:w:")) != -1)
    {
       switch (c)
       {
@@ -71,8 +81,10 @@ int main(int argc, char** argv)
          height = atoi(optarg);
          break;
       case 's':
-         //scale = (vec_t)atof(optarg);
-         scale = (float)atof(optarg);
+         scale = (vec_t)atof(optarg);
+         break;
+      case 'p':
+         showProgress = !showProgress;
          break;
       case '?':
          if (optopt == 'i' || optopt == 'o')
@@ -86,12 +98,16 @@ int main(int argc, char** argv)
          break;
       }
    }
+   
+   // Set up timekeeping.
+   gettimeofday(&startTime, NULL);
+
    // Make sure a file to read is specified
    if (inputSpecified)
    {
       if (!outputSpecified)
       {
-         outFile = DEFAULT_OUTFILE;
+         outFile = DEF_OUTFILE;
       }
       // Get the mesh from the specified file.
       readFile(inFile.c_str());
@@ -99,7 +115,7 @@ int main(int argc, char** argv)
       // Convert triangle coordinates from world to screen.
       convertCoords();
 
-      // Go SPEEDRACER GO!
+      // Go SPEEDRACER go!
       rasterize(outFile);
    }
    else
@@ -132,6 +148,16 @@ void rasterize(string outName)
          vec3 *color = &cbuf->data[x][y];
          // Rasterize the current pixel.
          rasterizePixel(&triList, x, y, z, color, outName);
+#ifndef _CUDA
+         // Print out progress bar.
+         if (showProgress)
+         {
+            // Set the frequency of ticks to update every .01%, if possible.
+            int tick = max(width * height / 10000, 100);
+            printProgress(startTime, x * height + y,
+                  width * height, tick);
+         }
+#endif
       }
    }
    // Write the color buffer to the image file.

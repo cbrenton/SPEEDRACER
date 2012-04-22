@@ -14,8 +14,10 @@
 HOST   = $(shell hostname | cut -d x -f 1)
 ifeq ($(HOST), 255)
    CC  = nvcc
+   CUDA = -D_CUDA
 else ifeq ($(HOST), tesla)
    CC  = nvcc
+   CUDA = -D_CUDA
 else
    CC  = g++
    ERROR = -Wconversion -Werror
@@ -31,12 +33,12 @@ IFLAGS = -I./src -I./lib -I./lib/pngwriter/include -DNO_FREETYPE -L./lib/pngwrit
 LFLAGS = -lpng -lz -lpngwriter -L./lib/pngwriter/lib
 OPTIMIZE = -O3
 #FLOAT = -D_USEDBL
-CFLAGS = $(OPTIMIZE) $(ERROR) $(IFLAGS) $(FLOAT)
+CFLAGS = $(OPTIMIZE) $(ERROR) $(IFLAGS) $(CUDA) $(FLOAT)
 LDFLAGS = $(OPTIMIZE) $(ERROR) $(LFLAGS)
 
 TARGET = SPEEDRACER™
 MODEL_DIR = models
-MODEL = bunny500
+MODEL = bunny10k
 #MODEL = test
 MODEL_EXT = m
 IMG_DIR = images
