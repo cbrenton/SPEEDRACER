@@ -25,7 +25,8 @@ thrust::host_vector<tri_t> cudaConvertCoords(vector<tri_t> triList,int h, int w)
    dim3 dimBlock(h/50 +1, w/50 +1);
    dim3 dimGrid(50,3);
    tri_d= sendTrianglesToDevice(triList);
-   cudaCoordinateCalc <<<dimBlock,dimGrid>>>(tri_d,tri_r,w,h);
+   cudaCoordinateCalc<<<dimBlock,dimGrid>>>(thrust::raw_pointer_cast(tri_d),tri_d.size(),
+   thrust::raw_pointer_cast(tri_r),w,h);
   
    return retrieveCoordinatesFromDevice(tri_r);
    
@@ -33,17 +34,17 @@ thrust::host_vector<tri_t> cudaConvertCoords(vector<tri_t> triList,int h, int w)
 
 
 //kernel for finding the new points after conversion
-__global__ void cudaCoordinateCalc(thrust::device_vector<tri_t> triList, 
-   thrust::device_vector<tri_t> tri_d,int w_in, int h_in,vec_t scale = (vec_t)1.0)
+__global__ void cudaCoordinateCalc(tri_t* triList, int listSize
+   ,tri_t* tri_d,int w_in, int h_in,vec_t scale = (vec_t)1.0)
 {
    int location;
    location =blockIdx.x*50 +threadIdx.x;
    //checki if this thread is within range
-   if(location >= triList.size())
+   if(location >= listSize)
    {
       return;
    }
-   int tpx,tpy; 
+   int tpX,tpY; 
    int h= h_in;
    int w= w_in;
 /*   // Convert x.
@@ -58,13 +59,13 @@ __global__ void cudaCoordinateCalc(thrust::device_vector<tri_t> triList,
    vec_t tmpX = triList[location].pt[threadIdx.y].coords.v[0] + dim; // Shift.
    tpX = (int)(tmpX * (vec_t)(w - 1) / 2 * ((vec_t)1.0 / dim)); // Scale.
    // Convert y.
-   vec_t tmpY = triList[location]coords.v[1] + dim; // Shift.
+   vec_t tmpY = triList[location].pt[threadIdx.y].coords.v[1] + dim; // Shift.
    tpY = (int)(tmpY * (vec_t)(h - 1) / 2 * ((vec_t)1.0 / dim)); // Scale.
 
 
 
-   tri_d[location].p[threadIdx.y].px = tpx;
-   tri_d[location].p[threadIdx.y].py = tpy;
+   ((tri_t)tri_d[location]).((point_t)pt[threadIdx.y]).px = tpX;
+   tri_d[location].pt[threadIdx.y].py = tpY;
    return;
 }
 

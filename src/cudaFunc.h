@@ -10,8 +10,7 @@ using namespace std;
 
 
 //function that manages the entire conversion process
-__global__ void cudaCoordinateCalc(thrust::device_vector<tri_t> triList,
-    thrust::device_vector<tri_t> tri_d,int w_in, int h_in);
+__global__ void cudaCoordinateCalc(tri_t* triList,int listSize, tri_t* tri_d,int w_in, int h_in);
 
 //kernel for converting the coordinates
 thrust::host_vector<tri_t> cudaConvertCoords(vector<tri_t> triList,int h, int w);
