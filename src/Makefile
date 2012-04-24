@@ -1,6 +1,9 @@
 all:
 	@+make -j 4 -C ../
 
+gpu:
+	@+make gpu -j 4 -C ../
+
 eog:
 	@make eog -C ../
 

@@ -11,12 +11,14 @@ struct tri_t
 {
    point_t **pt;
    vec3 *normal;
+   int *extents;
    bool perVert;
 
    tri_t()
    {
       perVert = false;
       pt = new point_t*[3];
+      extents = new int[4];
       if (perVert)
          normal = new vec3();
       else
@@ -28,6 +30,7 @@ struct tri_t
    {
       perVert = false;
       pt = new point_t*[3];
+      extents = new int[4];
       pt[0] = _p1;
       pt[1] = _p2;
       pt[2] = _p3;
@@ -41,6 +44,36 @@ struct tri_t
    ~tri_t()
    {
       delete [] pt;
+      if (perVert)
+         delete normal;
+      else
+         delete [] normal;
+      delete [] extents;
+   }
+
+   inline void genExtents()
+   {
+      int minX = pt[0]->pX;
+      int maxX = pt[0]->pX;
+      int minY = pt[0]->pY;
+      int maxY = pt[0]->pY;
+      for (int i = 0; i < 3; i++)
+      {
+         if (pt[i]->pX < minX)
+            minX = pt[i]->pX;
+         if (pt[i]->pX > maxX)
+            maxX = pt[i]->pX;
+         if (pt[i]->pY < minY)
+            minY = pt[i]->pY;
+         if (pt[i]->pY > maxY)
+            maxY = pt[i]->pY;
+      }
+      extents[0] = minX;
+      extents[1] = maxX;
+      extents[2] = minY;
+      extents[3] = maxY;
+      printf("x: %d-%d\n", extents[0], extents[1]);
+      printf("y: %d-%d\n", extents[2], extents[3]);
    }
 
    inline void genNormal()
@@ -81,6 +114,10 @@ struct tri_t
 
    bool hit(int x, int y, vec_t *t, vec3 *bary = NULL)
    {
+      if (x < extents[0] || x > extents[1] ||
+            y < extents[2] || y > extents[3])
+         return false;
+
       bool hit = true;
 
       vec_t bBeta, bGamma, bT;

@@ -43,6 +43,7 @@ vec_t scale = 1.f;
 bool showProgress = DEF_PROGRESS;
 
 void convertCoords();
+void makeBoundingBoxes();
 void vectorToArray();
 void printCoords();
 void rasterize(string outName);
@@ -116,6 +117,9 @@ int main(int argc, char** argv)
       // Convert triangle coordinates from world to screen.
       convertCoords();
 
+      // Generate triangle bounding boxes.
+      makeBoundingBoxes();
+
       vectorToArray();
 
       // Go SPEEDRACER go!
@@ -132,6 +136,14 @@ void convertCoords()
    for (int pointNdx = 0; pointNdx < (int)pointList.size(); pointNdx++)
    {
       pointList[pointNdx]->w2p(width, height, scale);
+   }
+}
+
+void makeBoundingBoxes()
+{
+   for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
+   {
+      triList[triNdx]->genExtents();
    }
 }
 

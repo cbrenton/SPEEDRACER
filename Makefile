@@ -30,15 +30,17 @@ SHELL  = /bin/sh
 MAKE   = make
 
 IFLAGS = -I./src -I./lib -I./lib/pngwriter/include -DNO_FREETYPE -L./lib/pngwriter/lib
-LFLAGS = -lpng -lz -lpngwriter -L./lib/pngwriter/lib
+LFLAGS = -lpng -lz -lpngwriter -L./lib/pngwriter/lib -I./lib/pngwriter/include
 OPTIMIZE = -O3
 #FLOAT = -D_USEDBL
-CFLAGS = $(OPTIMIZE) $(DEBUG) $(ERROR) $(IFLAGS) $(CUDA) $(FLOAT)
+CFLAGS = $(OPTIMIZE) $(DEBUG) $(ERROR) $(IFLAGS) $(FLOAT)
+CUDA_CFLAGS = $(CUDA)
 LDFLAGS = $(OPTIMIZE) $(DEBUG) $(ERROR) $(LFLAGS)
 
 MAKEFLAGS = " -j4 "
 
 TARGET = SPEEDRACER™
+CUDA_TARGET = cuSPEEDRACER™
 MODEL_DIR = models
 #MODEL = bunny500
 MODEL = bunny10k
@@ -58,20 +60,30 @@ LIBS = $(LIBFLAGS) -lm
 # Nothing should need changing below this line
 
 # The source files
-SRCS = $(wildcard src/*.cpp) $(wildcard src/**/*.cpp) $(wildcard src/*.cu) $(wildcard src/**/*.cu)
+SRCS = $(wildcard src/*.cpp) $(wildcard src/**/*.cpp)
+CUDA_SRCS = $(SRCS) $(wildcard src/*.cu) $(wildcard src/**/*.cu)
 HEADERS = $(wildcard src/*.h) $(wildcard src/**/*.h)
 
 OBJS = $(SRCS:.cpp=.o)
+CUDA_OBJS = $(CUDA_SRCS:.cu=.o) $(CUDA_SRCS:.cpp=.o)
 
 # Rules for building
 all: $(TARGET)
 	@#echo $(HOST) $(CC)
 
+gpu: $(CUDA_TARGET)
+
 $(TARGET): $(OBJS) $(HEADERS)
 	$(CC) $(OBJS) $(LDFLAGS) -o $@
 
+$(CUDA_TARGET): $(OBJS) $(CUDA_OBJS) $(HEADERS)
+	$(CC) $(OBJS) $(CUDA_OBJS) $(LDFLAGS) -o $@
+
 .cpp.o:
 	$(CC) $(CFLAGS) -c $< -o $@
+
+.cu.o:
+	$(CC) $(CFLAGS) $(CUDA_CFLAGS) -c $< -o $@
 
 .PHONY: lib
 lib:
