@@ -51,9 +51,6 @@ void vectorToArray();
 void printCoords();
 void rasterize();
 void rasterizeTri(tri_t **tris, int triNdx);
-void rasterizePixel(tri_t **tris, int size, int x, int y, vec_t *z,
-      vec3_t *color);
-void rasterizeTri(tri_t *tri);
 point_t * findPt(int ndx);
 void readFile(const char* filename);
 void readLine(char* str);
@@ -223,39 +220,6 @@ void rasterizeTri(tri_t **tris, int triNdx)
                // Write to z-buffer.
                *z = t;
             }
-         }
-      }
-   }
-}
-
-void rasterizePixel(tri_t **tris, int size, int x, int y, vec_t *z,
-      vec3_t *color)
-{
-   for (int triNdx = 0; triNdx < size; triNdx++)
-   {
-      tri_t *tri = tris[triNdx];
-      // Check for intersection.
-      vec_t t = FLT_MAX;
-      vec3_t bary;
-      if (tri->hit(x, y, &t, &bary))
-      {
-         // Check the z-buffer to see if this should be written.
-         if (t > *z)
-         {
-            // Calculate the normal.
-            vec3_t *normal = tri->normal;
-            // Calculate the color (N dot L).
-            vec_t colorMag = normal->dot(light);
-            if (colorMag < 0)
-            {
-               colorMag *= -1.f;
-            }
-            // Clamp the color to (0.0, 1.0).
-            colorMag = max((vec_t)0.f, min(colorMag, (vec_t)1.f));
-            // Write to color buffer.
-            color->v[0] = color->v[1] = color->v[2] = colorMag;
-            // Write to z-buffer.
-            *z = t;
          }
       }
    }
