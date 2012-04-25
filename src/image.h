@@ -8,7 +8,8 @@
 #define _IMAGE_H
 
 #include <string>
-#include "pngwriter.h"
+#include <iostream>
+//#include "pngwriter.h"
 #include "vector.h"
 #include "colorbuffer.h"
 
@@ -40,6 +41,6 @@ class Image
       void close();
 
    protected:
-      pngwriter *png;
+      //pngwriter *png;
 };
 #endif
