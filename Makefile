@@ -66,7 +66,8 @@ CUDA_SRCS = $(SRCS) $(wildcard src/*.cu) $(wildcard src/**/*.cu)
 HEADERS = $(wildcard src/*.h) $(wildcard src/**/*.h)
 
 OBJS = $(SRCS:.cpp=.o)
-CUDA_OBJS = $(CUDA_SRCS:.cu=.o) $(CUDA_SRCS:.cpp=.o)
+#CUDA_OBJS = $(CUDA_SRCS:.cu=.o) $(CUDA_SRCS:.cpp=.o)
+CUDA_OBJS = $(CUDA_SRCS:.cpp=.o)
 
 # Rules for building
 all: $(TARGET)
@@ -77,8 +78,9 @@ gpu: $(CUDA_TARGET)
 $(TARGET): $(OBJS) $(HEADERS)
 	$(CC) $(OBJS) $(LDFLAGS) -o $@
 
-$(CUDA_TARGET): $(CUDA_OBJS) $(CUDA_OBJS) $(HEADERS)
-	$(CC) $(CUDA_OBJS) $(CUDA_OBJS) $(LDFLAGS) -o $@
+$(CUDA_TARGET): $(CUDA_OBJS) $(HEADERS)
+	@echo $(CUDA_OBJS)
+	$(CC) $(CUDA_OBJS) $(LDFLAGS) -o $@
 
 .cpp.o:
 	$(CC) $(CFLAGS) -c $< -o $@
