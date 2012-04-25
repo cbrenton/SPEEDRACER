@@ -12,14 +12,33 @@ tri_t* sendTrianglesToDevice(tri_t* triList,int size)
 }
 //Function for retrieving the converted tri_t after the kernel has been run
 //assumes that the tri_return points to a malloced pointer for the given size
-tri_t* retrieveCoordinatesFromDevice(tri_t* triList_d,int size)
+tri_t* retrieveTrianglesFromDevice(tri_t* triList_d,int size)
 {
    tri_t* tri_r;
    tri_r = malloc(sizeof(tri_t)*size);
-   cudaMemCpy(tri_return,triList_d,sizeof(tri_t)*size,cudaMemcpyDeviceToHost);
-   //cudaFree(triList_d);
+   cudaMemcpy(tri_return,triList_d,sizeof(tri_t)*size,cudaMemcpyDeviceToHost);
+   cudaFree(triList_d);
    return tri_return;
 }
+point_t* retrievePointsFromDevice(point_t*pointList,point_t* point_d,int size)
+{
+   point_t* point_r;
+   point_r = malloc(sizeof(point_t)*size);
+   cudaMemcpy(point_r,point_d,sizeof(point_t)*size);
+   return point_r;
+
+}
+
+//function for sending the points to the device, returns a pointer to the mem
+point_t* sendPointsToDevice(point_t* pointList,int size)
+{
+   point_t* point_d;
+   cudaMalloc(&pointList_d,sizeof(point_t)*size);
+   cudaMemCpy(point_d,pointList,sizeof(point_t)*size,cudaMemcpyHostToDevice);
+   return point_d;
+
+}
+
 //function to run the entire convert process
 tri_t* cudaConvertCoords(tri_t* triList,int size, int h, int w)
 {
@@ -30,7 +49,7 @@ tri_t* cudaConvertCoords(tri_t* triList,int size, int h, int w)
    tri_d= sendTrianglesToDevice(triList,size);
    //cudaCoordinateCalc<<<dimBlock,dimGrid>>>(thrust::raw_pointer_cast(tri_d),tri_d.size(),
   // thrust::raw_pointer_cast(tri_r),w,h);
-  
+   
    return retrieveCoordinatesFromDevice(tri_r,size);
    
 }
