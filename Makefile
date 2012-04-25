@@ -42,7 +42,8 @@ MAKEFLAGS = " -j4 "
 TARGET = SPEEDRACER™
 CUDA_TARGET = cuSPEEDRACER™
 MODEL_DIR = models
-MODEL = bunny.orig
+#MODEL = bunny.orig
+MODEL = bunny500
 MODEL_EXT = m
 IMG_DIR = images
 IMG_EXT = png
@@ -74,13 +75,14 @@ gpu: $(CUDA_TARGET)
 $(TARGET): $(OBJS) $(HEADERS)
 	$(CC) $(OBJS) $(LDFLAGS) -o $@
 
-$(CUDA_TARGET): $(OBJS) $(CUDA_OBJS) $(HEADERS)
-	$(CC) $(OBJS) $(CUDA_OBJS) $(LDFLAGS) -o $@
+$(CUDA_TARGET): $(CUDA_OBJS) $(CUDA_OBJS) $(HEADERS)
+	$(CC) $(CUDA_OBJS) $(CUDA_OBJS) $(LDFLAGS) -o $@
 
 .cpp.o:
 	$(CC) $(CFLAGS) -c $< -o $@
 
-.cu.o:
+#.cu.o:
+%.o : %.cu
 	$(CC) $(CFLAGS) $(CUDA_CFLAGS) -c $< -o $@
 
 .PHONY: lib

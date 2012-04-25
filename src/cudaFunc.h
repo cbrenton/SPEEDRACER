@@ -1,6 +1,6 @@
 //Header file for the rasterizer cuda functions
 #include <stdio.h>
-#include "vec3.h"
+#include "vector.h"
 #include <vector>
 #include "tri_t.h"
 #include <cuda_runtime.h>
