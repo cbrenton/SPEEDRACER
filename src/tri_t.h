@@ -10,48 +10,39 @@
 
 struct tri_t
 {
-   vector <point_t *> *ptList;
+   point_t **ptList;
+   int numPts;
    int *pt;
    vec3_t *normal;
    int *extents;
-   bool perVert;
 
-   //tri_t(point_t *_p1, point_t *_p2, point_t *_p3)
-   tri_t(int _p1, int _p2, int _p3, vector <point_t *> *list) :
-      ptList(list)
+   tri_t(int _p1, int _p2, int _p3, point_t **list, int listSize) :
+      ptList(list), numPts(listSize)
    {
-      perVert = false;
-      //pt = new point_t*[3];
       pt = new int[3];
+      normal = new vec3_t();
       extents = new int[4];
       pt[0] = _p1;
       pt[1] = _p2;
       pt[2] = _p3;
-      if (perVert)
-         normal = new vec3_t();
-      else
-         normal = new vec3_t[3];
-      genNormal();
    }
 
    ~tri_t()
    {
       delete [] pt;
-      if (perVert)
+      if (normal)
          delete normal;
-      else
-         delete [] normal;
       delete [] extents;
    }
 
    point_t * getPt(int index)
    {
-      if (index > (int)ptList->size() || index < 0)
+      if (index > numPts || index < 0)
       {
          fprintf(stderr, "tri_t.getPt(): index must be a valid array index.\n");
          exit(EXIT_FAILURE);
       }
-      return ptList->at(index);
+      return ptList[index];
    }
 
    void genExtents()
@@ -79,24 +70,15 @@ struct tri_t
 
    void genNormal()
    {
-      if (!perVert)
-      {
-         // Calculate the normal.
-         vec3_t ab = getPt(pt[0])->toF3World();
-         vec3_t ab2 = getPt(pt[1])->toF3World();
-         ab -= ab2;
-         vec3_t ac = getPt(pt[0])->toF3World();
-         vec3_t ac2 = getPt(pt[2])->toF3World();
-         ac -= ac2;
-         normal->cross(ab, ac);
-         normal->normalize();
-      }
-      else
-      {
-         normal[0] = vec3_t(1.f, 0.f, 0.f);
-         normal[1] = vec3_t(0.f, 1.f, 0.f);
-         normal[2] = vec3_t(0.f, 0.f, 1.f);
-      }
+      // Calculate the normal.
+      vec3_t ab = getPt(pt[0])->toF3World();
+      vec3_t ab2 = getPt(pt[1])->toF3World();
+      ab -= ab2;
+      vec3_t ac = getPt(pt[0])->toF3World();
+      vec3_t ac2 = getPt(pt[2])->toF3World();
+      ac -= ac2;
+      normal->cross(ab, ac);
+      normal->normalize();
    }
 
    void w2p(int w, int h)
