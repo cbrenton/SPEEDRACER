@@ -19,6 +19,8 @@ lib:
 run:
 	@make run -C ../
 
+cudarun:
+	@make cudarun -C ../
 vg:
 	@make vg -C ../
 

@@ -24,6 +24,10 @@
 #include "vector.h"
 #include "zbuffer.h"
 
+#ifdef _CUDA
+#include "cudaFunc.h"
+#endif
+
 // Default values.
 #define DEF_W 800
 #define DEF_H 600
@@ -46,11 +50,14 @@ string outName;
 zbuffer *zbuf;
 colorbuffer *cbuf;
 
+#ifdef _CUDA
+void gpuConvertCoords();
+#endif
 void convertCoords();
 void pointsToArray();
 void makeBoundingBoxes();
 void makeNormals();
-void vectorToArray();
+void trisToArray();
 void printCoords();
 void rasterize();
 void rasterizeTri(tri_t *tris, int triNdx, colorbuffer *buf);
@@ -119,19 +126,24 @@ int main(int argc, char** argv)
       // Get the mesh from the specified file.
       readFile(inFile.c_str());
 
-      // Convert triangle coordinates from world to screen.
-      convertCoords();
-
+      // Convert point vector to an array.
       pointsToArray();
 
-#ifndef _CUDA
-      // Generate triangle bounding boxes.
-      makeBoundingBoxes();
+      // Convert triangle coordinates from world to screen.
+#ifdef _CUDA
+      gpuConvertCoords();
+#else
+      convertCoords();
 #endif
 
+      // Generate triangle bounding boxes.
+      makeBoundingBoxes();
+
+      // Generate triangle normals.
       makeNormals();
 
-      vectorToArray();
+      // Convert triangle vector to an array.
+      trisToArray();
 
       // Go SPEEDRACER go!
       rasterize();
@@ -142,11 +154,20 @@ int main(int argc, char** argv)
    }
 }
 
+#ifdef _CUDA
+void gpuConvertCoords()
+{
+   pointArray = cudaConvertCoords(pointArray, (int)pointList.size(),
+         height, width, scale);
+}
+#endif
+
 void convertCoords()
 {
    for (int pointNdx = 0; pointNdx < (int)pointList.size(); pointNdx++)
    {
-      pointList[pointNdx].w2p(width, height, scale);
+      //pointList[pointNdx].w2p(width, height, scale);
+      pointArray[pointNdx].w2p(width, height, scale);
    }
 }
 
@@ -180,7 +201,7 @@ void makeNormals()
    }
 }
 
-void vectorToArray()
+void trisToArray()
 {
    triArray = new tri_t[triList.size()];
    for (int tri = 0; tri < (int)triList.size(); tri++)

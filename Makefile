@@ -33,7 +33,7 @@ MAKE   = make
 
 IFLAGS = -I./src -I./lib -I./lib/pngwriter/include -DNO_FREETYPE -L./lib/pngwriter/lib
 LFLAGS = -lpng -lz -lpngwriter -L./lib/pngwriter/lib -I./lib/pngwriter/include
-OPTIMIZE = -pg
+OPTIMIZE = -O3 -pg
 FLOAT = -D_USEDBL
 CFLAGS = $(OPTIMIZE) $(DEBUG) $(ERROR) $(IFLAGS) $(FLOAT)
 CUDA_CFLAGS = $(CUDA)
@@ -79,7 +79,7 @@ $(TARGET): $(OBJS) $(HEADERS)
 	$(CC) $(OBJS) $(LDFLAGS) -o $@
 
 $(CUDA_TARGET): $(CUDA_OBJS) $(HEADERS)
-	@echo $(CUDA_OBJS)
+	@#echo $(CUDA_OBJS)
 	$(CC) $(CUDA_OBJS) $(LDFLAGS) -o $@
 
 .cpp.o:
@@ -94,6 +94,9 @@ lib:
 
 run:
 	./$(TARGET) $(ARGS)
+
+cudarun:
+	./$(CUDA_TARGET) $(ARGS)
 
 eog:
 	eog ./$(IMG_DIR)/$(MODEL).$(IMG_EXT)

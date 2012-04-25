@@ -15,6 +15,9 @@ struct point_t
    point_t()
    {
       index = -1;
+      coords.v[0] = 0;
+      coords.v[1] = 0;
+      coords.v[2] = 0;
       pX = 0;
       pY = 0;
    }
@@ -32,6 +35,7 @@ struct point_t
    point_t(const point_t& pt)
    {
       index = pt.index;
+      //*coords = *pt.coords;
       coords[0] = pt.coords[0];
       coords[1] = pt.coords[1];
       coords[2] = pt.coords[2];
@@ -41,13 +45,12 @@ struct point_t
 
    void w2p(int w, int h, vec_t scale = (vec_t)1.0)
    {
-      vec_t dim = scale;
       // Convert x.
-      vec_t tmpX = coords.v[0] + dim; // Shift.
-      pX = (int)(tmpX * (vec_t)(w - 1) / 2 * ((vec_t)1.0 / dim)); // Scale.
+      vec_t tmpX = coords.v[0] + scale; // Shift.
+      pX = (int)(tmpX * (vec_t)(w - 1) / 2 * ((vec_t)1.0 / scale)); // Scale.
       // Convert y.
-      vec_t tmpY = coords.v[1] + dim; // Shift.
-      pY = (int)(tmpY * (vec_t)(h - 1) / 2 * ((vec_t)1.0 / dim)); // Scale.
+      vec_t tmpY = coords.v[1] + scale; // Shift.
+      pY = (int)(tmpY * (vec_t)(h - 1) / 2 * ((vec_t)1.0 / scale)); // Scale.
    }
 
    inline bool isNum(int check)
@@ -57,6 +60,7 @@ struct point_t
 
    vec3_t toF3Screen()
    {
+      //return vec3_t((vec_t)pX, (vec_t)pY, 0);
       return vec3_t((vec_t)pX, (vec_t)pY, 0);
    }
 
@@ -74,6 +78,7 @@ struct point_t
       }
       else
       {
+         //printf("\t%d: %d %d\n", index, pX, pY);
          printf("\t%d: %d %d\n", index, pX, pY);
       }
    }
