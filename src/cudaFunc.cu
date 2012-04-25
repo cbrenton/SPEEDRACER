@@ -5,9 +5,9 @@
 //
 tri_t* sendTrianglesToDevice(tri_t* triList,int size)
 {
-   tri_t* triList_d;
-   cudaMalloc(&triList_d,sizeof(tri_t)*size);
-   cudaMemCpy(triList_d,triList,sizeof(tri_t)*size,cudaMemcpyHostToDevice);
+   tri_t* tri_d;
+   cudaMalloc(&tri_d,sizeof(tri_t)*size);
+   cudaMemcpy(tri_d,triList,sizeof(tri_t)*size,cudaMemcpyHostToDevice);
    return tri_d;
 }
 //Function for retrieving the converted tri_t after the kernel has been run
@@ -15,16 +15,16 @@ tri_t* sendTrianglesToDevice(tri_t* triList,int size)
 tri_t* retrieveTrianglesFromDevice(tri_t* triList_d,int size)
 {
    tri_t* tri_r;
-   tri_r = malloc(sizeof(tri_t)*size);
-   cudaMemcpy(tri_return,triList_d,sizeof(tri_t)*size,cudaMemcpyDeviceToHost);
+   tri_r = (tri_t*)malloc(sizeof(tri_t)*size);
+   cudaMemcpy(tri_r,triList_d,sizeof(tri_t)*size,cudaMemcpyDeviceToHost);
    cudaFree(triList_d);
-   return tri_return;
+   return tri_r;
 }
 point_t* retrievePointsFromDevice(point_t*pointList,point_t* point_d,int size)
 {
    point_t* point_r;
-   point_r = malloc(sizeof(point_t)*size);
-   cudaMemcpy(point_r,point_d,sizeof(point_t)*size);
+   point_r = (point_t*)malloc(sizeof(point_t)*size);
+   cudaMemcpy(point_r,point_d,sizeof(point_t)*size,cudaMemcpyDeviceToHost);
    return point_r;
 
 }
@@ -33,8 +33,8 @@ point_t* retrievePointsFromDevice(point_t*pointList,point_t* point_d,int size)
 point_t* sendPointsToDevice(point_t* pointList,int size)
 {
    point_t* point_d;
-   cudaMalloc(&pointList_d,sizeof(point_t)*size);
-   cudaMemCpy(point_d,pointList,sizeof(point_t)*size,cudaMemcpyHostToDevice);
+   cudaMalloc(&point_d,sizeof(point_t)*size);
+   cudaMemcpy(point_d,pointList,sizeof(point_t)*size,cudaMemcpyHostToDevice);
    return point_d;
 
 }
@@ -50,7 +50,8 @@ tri_t* cudaConvertCoords(tri_t* triList,int size, int h, int w)
    //cudaCoordinateCalc<<<dimBlock,dimGrid>>>(thrust::raw_pointer_cast(tri_d),tri_d.size(),
   // thrust::raw_pointer_cast(tri_r),w,h);
    
-   return retrieveCoordinatesFromDevice(tri_r,size);
+
+   return tri_d;
    
 }
 
