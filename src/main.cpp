@@ -51,7 +51,8 @@ void vectorToArray();
 void printCoords();
 void rasterize();
 void rasterizeTri(tri_t **tris, int triNdx);
-point_t * findPt(int ndx);
+//point_t * findPt(int ndx);
+int findPt(int ndx);
 void readFile(const char* filename);
 void readLine(char* str);
 void readStream(istream& is);
@@ -226,13 +227,14 @@ void rasterizeTri(tri_t **tris, int triNdx)
 }
 
 // Process each line of input save vertices and faces appropriately
-point_t * findPt(int ndx)
+//point_t * findPt(int ndx)
+int findPt(int ndx)
 {
    for (int i = 0; i < (int)pointList.size(); i++)
    {
       if (pointList.at(i)->isNum(ndx))
       {
-         return pointList.at(i);
+         return i;
       }
    }
    fprintf(stderr, "Error: vertex not found.\n");
@@ -295,8 +297,9 @@ void readLine(char* str)
    }
    else if (str[0]=='F' && !strncmp(str,"Face ",5))
    {
-      point_t *tmpPt1, *tmpPt2, *tmpPt3;
-      tmpPt1 = tmpPt2 = tmpPt3 = NULL;
+      int tmpPt1 = -1;
+      int tmpPt2 = -1;
+      int tmpPt3 = -1;
       char* s=str+4;
       int fi=-1;
       for (int t_i = 0;;t_i++)
@@ -329,7 +332,7 @@ void readLine(char* str)
          {
             // Store the third vertex in your face object
             tmpPt3 = findPt(j);
-            tri_t *newTri = new tri_t(tmpPt1, tmpPt2, tmpPt3);
+            tri_t *newTri = new tri_t(tmpPt1, tmpPt2, tmpPt3, &pointList);
             // Store the new triangle in your face collection
             triList.push_back(newTri);
          }

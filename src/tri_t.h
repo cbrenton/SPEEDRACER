@@ -4,32 +4,25 @@
 #include "mat_t.h"
 #include "point_t.h"
 #include "vector.h"
+#include <vector>
 
 #define EPSILON 0.001f
 
 struct tri_t
 {
-   point_t **pt;
+   vector <point_t *> *ptList;
+   int *pt;
    vec3_t *normal;
    int *extents;
    bool perVert;
 
-   tri_t()
+   //tri_t(point_t *_p1, point_t *_p2, point_t *_p3)
+   tri_t(int _p1, int _p2, int _p3, vector <point_t *> *list) :
+      ptList(list)
    {
       perVert = false;
-      pt = new point_t*[3];
-      extents = new int[4];
-      if (perVert)
-         normal = new vec3_t();
-      else
-         normal = new vec3_t[3];
-      genNormal();
-   }
-
-   tri_t(point_t *_p1, point_t *_p2, point_t *_p3)
-   {
-      perVert = false;
-      pt = new point_t*[3];
+      //pt = new point_t*[3];
+      pt = new int[3];
       extents = new int[4];
       pt[0] = _p1;
       pt[1] = _p2;
@@ -51,22 +44,32 @@ struct tri_t
       delete [] extents;
    }
 
+   point_t * getPt(int index)
+   {
+      if (index > (int)ptList->size() || index < 0)
+      {
+         fprintf(stderr, "tri_t.getPt(): index must be a valid array index.\n");
+         exit(EXIT_FAILURE);
+      }
+      return ptList->at(index);
+   }
+
    void genExtents()
    {
-      int minX = pt[0]->pX;
-      int maxX = pt[0]->pX;
-      int minY = pt[0]->pY;
-      int maxY = pt[0]->pY;
+      int minX = getPt(pt[0])->pX;
+      int maxX = getPt(pt[0])->pX;
+      int minY = getPt(pt[0])->pY;
+      int maxY = getPt(pt[0])->pY;
       for (int i = 0; i < 3; i++)
       {
-         if (pt[i]->pX < minX)
-            minX = pt[i]->pX;
-         if (pt[i]->pX > maxX)
-            maxX = pt[i]->pX;
-         if (pt[i]->pY < minY)
-            minY = pt[i]->pY;
-         if (pt[i]->pY > maxY)
-            maxY = pt[i]->pY;
+         if (getPt(pt[i])->pX < minX)
+            minX = getPt(pt[i])->pX;
+         if (getPt(pt[i])->pX > maxX)
+            maxX = getPt(pt[i])->pX;
+         if (getPt(pt[i])->pY < minY)
+            minY = getPt(pt[i])->pY;
+         if (getPt(pt[i])->pY > maxY)
+            maxY = getPt(pt[i])->pY;
       }
       extents[0] = minX;
       extents[1] = maxX;
@@ -79,11 +82,11 @@ struct tri_t
       if (!perVert)
       {
          // Calculate the normal.
-         vec3_t ab = pt[0]->toF3World();
-         vec3_t ab2 = pt[1]->toF3World();
+         vec3_t ab = getPt(pt[0])->toF3World();
+         vec3_t ab2 = getPt(pt[1])->toF3World();
          ab -= ab2;
-         vec3_t ac = pt[0]->toF3World();
-         vec3_t ac2 = pt[2]->toF3World();
+         vec3_t ac = getPt(pt[0])->toF3World();
+         vec3_t ac2 = getPt(pt[2])->toF3World();
          ac -= ac2;
          normal->cross(ab, ac);
          normal->normalize();
@@ -100,7 +103,7 @@ struct tri_t
    {
       for (int i = 0; i < 3; i++)
       {
-         pt[i]->w2p(w, h);
+         getPt(pt[i])->w2p(w, h);
       }
    }
 
@@ -119,7 +122,7 @@ struct tri_t
       vec3_t screenPt[3];
       for (int i = 0; i < 3; i++)
       {
-         screenPt[i] = pt[i]->toF3Screen();
+         screenPt[i] = getPt(pt[i])->toF3Screen();
       }
 
       mat_t A (screenPt[0].x(), screenPt[1].x(), screenPt[2].x(),
@@ -171,8 +174,8 @@ struct tri_t
 
       if (hit)
       {
-         *t = bT * pt[0]->coords.v[2] + bBeta * pt[1]->coords.v[2] + bGamma *
-            pt[2]->coords.v[2];
+         *t = bT * getPt(pt[0])->coords.v[2] + bBeta * getPt(pt[1])->coords.v[2] + bGamma *
+            getPt(pt[2])->coords.v[2];
          if (bary)
          {
             bary->v[0] = bT;
