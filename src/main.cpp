@@ -38,6 +38,7 @@ int height = DEF_H;
 vector<point_t *> pointList;
 vector<tri_t *> triList;
 tri_t **triArray;
+point_t **pointArray;
 vec3_t light (0, 0, 1);
 vec_t scale = 1.f;
 bool showProgress = DEF_PROGRESS;
@@ -46,7 +47,9 @@ zbuffer *zbuf;
 colorbuffer *cbuf;
 
 void convertCoords();
+void pointsToArray();
 void makeBoundingBoxes();
+void makeNormals();
 void vectorToArray();
 void printCoords();
 void rasterize();
@@ -119,10 +122,14 @@ int main(int argc, char** argv)
       // Convert triangle coordinates from world to screen.
       convertCoords();
 
+      pointsToArray();
+
 #ifndef _CUDA
       // Generate triangle bounding boxes.
       makeBoundingBoxes();
 #endif
+
+      makeNormals();
 
       vectorToArray();
 
@@ -143,11 +150,33 @@ void convertCoords()
    }
 }
 
+void pointsToArray()
+{
+   pointArray = new point_t *[pointList.size()];
+   for (int point = 0; point < (int)pointList.size(); point++)
+   {
+      pointArray[point] = pointList[point];
+   }
+   for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
+   {
+      triList[triNdx]->ptList = pointArray;
+      triList[triNdx]->numPts = (int)pointList.size();
+   }
+}
+
 void makeBoundingBoxes()
 {
    for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
    {
       triList[triNdx]->genExtents();
+   }
+}
+
+void makeNormals()
+{
+   for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
+   {
+      triList[triNdx]->genNormal();
    }
 }
 
@@ -173,14 +202,7 @@ void rasterize()
    for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
    {
       rasterizeTri(triArray, triNdx);
-#ifndef _CUDA
-      if (showProgress)
-      {
-         // Print the progress bar.
-         printProgress(triNdx, (int)triList.size(), tick);
-      }
    }
-#endif
    // Write the color buffer to the image file.
    im->write(cbuf);
    // Close image and clean up.
@@ -332,7 +354,9 @@ void readLine(char* str)
          {
             // Store the third vertex in your face object
             tmpPt3 = findPt(j);
-            tri_t *newTri = new tri_t(tmpPt1, tmpPt2, tmpPt3, &pointList);
+            //tri_t *newTri = new tri_t(tmpPt1, tmpPt2, tmpPt3, &pointList);
+            tri_t *newTri = new tri_t(tmpPt1, tmpPt2, tmpPt3, pointArray,
+                  (int)pointList.size());
             // Store the new triangle in your face collection
             triList.push_back(newTri);
          }

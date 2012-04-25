@@ -15,9 +15,11 @@ HOST   = $(shell hostname | cut -d x -f 1)
 ifeq ($(HOST), 255)
    CC  = nvcc
    CUDA = -D_CUDA
+   CU_MAKE = $(CC) $(CFLAGS) $(CUDA_CFLAGS) -c $< -o $@
 else ifeq ($(HOST), tesla)
    CC  = nvcc
    CUDA = -D_CUDA
+   CU_MAKE = $(CC) $(CFLAGS) $(CUDA_CFLAGS) -c $< -o $@
 else
    CC  = g++
    ERROR = -Wconversion -Werror
@@ -81,9 +83,8 @@ $(CUDA_TARGET): $(CUDA_OBJS) $(CUDA_OBJS) $(HEADERS)
 .cpp.o:
 	$(CC) $(CFLAGS) -c $< -o $@
 
-#.cu.o:
 %.o : %.cu
-	$(CC) $(CFLAGS) $(CUDA_CFLAGS) -c $< -o $@
+	$(CU_MAKE)
 
 .PHONY: lib
 lib:
