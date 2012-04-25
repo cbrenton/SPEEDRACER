@@ -17,7 +17,7 @@
 #include <vector>
 
 #include "colorbuffer.h"
-//#include "image.h"
+#include "image.h"
 #include "point_t.h"
 #include "progress.h"
 #include "tri_t.h"
@@ -53,7 +53,8 @@ void makeNormals();
 void vectorToArray();
 void printCoords();
 void rasterize();
-void rasterizeTri(tri_t **tris, int triNdx);
+//void rasterizeTri(tri_t **tris, int triNdx);
+void rasterizeTri(tri_t **tris, int triNdx, colorbuffer *buf);
 //point_t * findPt(int ndx);
 int findPt(int ndx);
 void readFile(const char* filename);
@@ -192,27 +193,23 @@ void vectorToArray()
 void rasterize()
 {
    // Initialize the image.
-   //Image *im = new Image(height, width, outName);
+   Image *im = new Image(width, height, outName);
    zbuf = new zbuffer(width, height);
    cbuf = new colorbuffer(width, height);
 
-   // Set the frequency of ticks to update every .01%, if possible.
-   int tick = max(width * height / 10000, 100);
-
    for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
    {
-      rasterizeTri(triArray, triNdx);
+      rasterizeTri(triArray, triNdx, cbuf);
    }
    // Write the color buffer to the image file.
-   //im->write(cbuf);
+   im->write(cbuf);
    // Close image and clean up.
-   //im->close();
-   //delete im;
+   delete im;
    delete cbuf;
    delete zbuf;
 }
 
-void rasterizeTri(tri_t **tris, int triNdx)
+void rasterizeTri(tri_t **tris, int triNdx, colorbuffer *buf)
 {
    tri_t *tri = tris[triNdx];
    for (int x = tri->extents[0]; x < tri->extents[1]; x++)
@@ -224,7 +221,6 @@ void rasterizeTri(tri_t **tris, int triNdx)
          vec3_t bary;
          if (tri->hit(x, y, &t, &bary))
          {
-            vec3_t *color = &cbuf->data[x][y];
             // Check the z-buffer to see if this should be written.
             if (t > *z)
             {
@@ -239,7 +235,9 @@ void rasterizeTri(tri_t **tris, int triNdx)
                // Clamp the color to (0.0, 1.0).
                colorMag = max((vec_t)0.f, min(colorMag, (vec_t)1.f));
                // Write to color buffer.
-               color->v[0] = color->v[1] = color->v[2] = colorMag;
+               buf->data[x][y].v[0] = colorMag;
+               buf->data[x][y].v[1] = colorMag;
+               buf->data[x][y].v[2] = colorMag;
                // Write to z-buffer.
                *z = t;
             }
@@ -249,7 +247,6 @@ void rasterizeTri(tri_t **tris, int triNdx)
 }
 
 // Process each line of input save vertices and faces appropriately
-//point_t * findPt(int ndx)
 int findPt(int ndx)
 {
    for (int i = 0; i < (int)pointList.size(); i++)
