@@ -183,33 +183,13 @@ void rasterize()
       }
    }
 #endif
-   /*
-   // For each pixel in the image:
-   for (int x = 0; x < width; x++)
-   {
-   for (int y = 0; y < height; y++)
-   {
-   vec_t *z = zbuf->data[x][y];
-   vec3_t *color = &cbuf->data[x][y];
-   // Rasterize the current pixel.
-   rasterizePixel(triArray, (int)triList.size(), x, y, z, color);
-#ifndef _CUDA
-if (showProgress)
-{
-   // Print the progress bar.
-   printProgress(x * height + y, width * height, tick);
-   }
-#endif
-}
-}
-*/
-// Write the color buffer to the image file.
-im->write(cbuf);
-// Close image and clean up.
-im->close();
-delete im;
-delete cbuf;
-delete zbuf;
+   // Write the color buffer to the image file.
+   im->write(cbuf);
+   // Close image and clean up.
+   im->close();
+   delete im;
+   delete cbuf;
+   delete zbuf;
 }
 
 void rasterizeTri(tri_t **tris, int triNdx)
@@ -224,26 +204,25 @@ void rasterizeTri(tri_t **tris, int triNdx)
          vec3_t bary;
          if (tri->hit(x, y, &t, &bary))
          {
-            //vec3_t *color = cbuf->data
             vec3_t *color = &cbuf->data[x][y];
-               // Check the z-buffer to see if this should be written.
-               if (t > *z)
+            // Check the z-buffer to see if this should be written.
+            if (t > *z)
+            {
+               // Calculate the normal.
+               vec3_t *normal = tri->normal;
+               // Calculate the color (N dot L).
+               vec_t colorMag = normal->dot(light);
+               if (colorMag < 0)
                {
-                  // Calculate the normal.
-                  vec3_t *normal = tri->normal;
-                  // Calculate the color (N dot L).
-                  vec_t colorMag = normal->dot(light);
-                  if (colorMag < 0)
-                  {
-                     colorMag *= -1.f;
-                  }
-                  // Clamp the color to (0.0, 1.0).
-                  colorMag = max((vec_t)0.f, min(colorMag, (vec_t)1.f));
-                  // Write to color buffer.
-                  color->v[0] = color->v[1] = color->v[2] = colorMag;
-                  // Write to z-buffer.
-                  *z = t;
+                  colorMag *= -1.f;
                }
+               // Clamp the color to (0.0, 1.0).
+               colorMag = max((vec_t)0.f, min(colorMag, (vec_t)1.f));
+               // Write to color buffer.
+               color->v[0] = color->v[1] = color->v[2] = colorMag;
+               // Write to z-buffer.
+               *z = t;
+            }
          }
       }
    }
@@ -329,8 +308,6 @@ void readStream(istream& is)
 void readLine(char* str)
 {
    int vi;
-   //vec_t x, y, z;
-   //vec_t r, g, b;
    float x, y, z;
    float r, g, b;
    int mat;

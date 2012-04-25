@@ -163,11 +163,11 @@ del software installado (esto se determina de lo que era PREFIX al
 momento de instalar):
 
 
- -  libpngwriter.a: /lib/ /lib/ /lib/ /lib/ /lib/ /lib/ /lib/ /lib/ /lib/ /usr/local/lib/ /usr/local/lib/ /usr/local/lib/ /usr/local/lib/ 
- -  pngwriter.h: /include/ /include/ /include/ /include/ /include/ /include/ /include/ /include/ /include/ /usr/local/include/ /usr/local/include/ /usr/local/include/ /usr/local/include/ 
- -  documentacion: /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /usr/local/share/doc/pngwriter/ /usr/local/share/doc/pngwriter/ /usr/local/share/doc/pngwriter/ /usr/local/share/doc/pngwriter/ 
- -  ejemplos: /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /usr/local/share/doc/pngwriter/ /usr/local/share/doc/pngwriter/ /usr/local/share/doc/pngwriter/ /usr/local/share/doc/pngwriter/ 
- -  fonts: /share/pngwriter/fonts/ /share/pngwriter/fonts/ /share/pngwriter/fonts/ /share/pngwriter/fonts/ /share/pngwriter/fonts/ /share/pngwriter/fonts/ /share/pngwriter/fonts/ /share/pngwriter/fonts/ /share/pngwriter/fonts/ /usr/local/share/pngwriter/fonts/ /usr/local/share/pngwriter/fonts/ /usr/local/share/pngwriter/fonts/ /usr/local/share/pngwriter/fonts/ 
+ -  libpngwriter.a: /lib/ /lib/ /lib/ /lib/ /lib/ /lib/ /lib/ /lib/ /lib/ /lib/ /lib/ /usr/local/lib/ /usr/local/lib/ /usr/local/lib/ /usr/local/lib/ 
+ -  pngwriter.h: /include/ /include/ /include/ /include/ /include/ /include/ /include/ /include/ /include/ /include/ /include/ /usr/local/include/ /usr/local/include/ /usr/local/include/ /usr/local/include/ 
+ -  documentacion: /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /usr/local/share/doc/pngwriter/ /usr/local/share/doc/pngwriter/ /usr/local/share/doc/pngwriter/ /usr/local/share/doc/pngwriter/ 
+ -  ejemplos: /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /share/doc/pngwriter/ /usr/local/share/doc/pngwriter/ /usr/local/share/doc/pngwriter/ /usr/local/share/doc/pngwriter/ /usr/local/share/doc/pngwriter/ 
+ -  fonts: /share/pngwriter/fonts/ /share/pngwriter/fonts/ /share/pngwriter/fonts/ /share/pngwriter/fonts/ /share/pngwriter/fonts/ /share/pngwriter/fonts/ /share/pngwriter/fonts/ /share/pngwriter/fonts/ /share/pngwriter/fonts/ /share/pngwriter/fonts/ /share/pngwriter/fonts/ /usr/local/share/pngwriter/fonts/ /usr/local/share/pngwriter/fonts/ /usr/local/share/pngwriter/fonts/ /usr/local/share/pngwriter/fonts/ 
 
 
 Mira en examples/ para ver dos ejemplos del uso de PNGwriter, y en
