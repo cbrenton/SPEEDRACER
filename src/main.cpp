@@ -202,14 +202,7 @@ void rasterize()
    for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
    {
       rasterizeTri(triArray, triNdx);
-#ifndef _CUDA
-      if (showProgress)
-      {
-         // Print the progress bar.
-         printProgress(triNdx, (int)triList.size(), tick);
-      }
    }
-#endif
    // Write the color buffer to the image file.
    im->write(cbuf);
    // Close image and clean up.
