@@ -10,13 +10,20 @@
 
 struct tri_t
 {
-   point_t **ptList;
+   point_t *ptList;
    int numPts;
    int *pt;
    vec3_t *normal;
    int *extents;
 
-   tri_t(int _p1, int _p2, int _p3, point_t **list, int listSize) :
+   tri_t()
+   {
+      pt = new int[3];
+      normal = new vec3_t();
+      extents = new int[4];
+   }
+
+   tri_t(int _p1, int _p2, int _p3, point_t *list, int listSize) :
       ptList(list), numPts(listSize)
    {
       pt = new int[3];
@@ -27,11 +34,24 @@ struct tri_t
       pt[2] = _p3;
    }
 
+   tri_t(const tri_t& tri)
+   {
+      ptList = tri.ptList;
+      numPts = tri.numPts;
+      pt = new int[3];
+      pt[0] = tri.pt[0];
+      pt[1] = tri.pt[1];
+      pt[2] = tri.pt[2];
+      normal = new vec3_t();
+      *normal = *tri.normal;
+      extents = new int[4];
+      *extents = *tri.extents;
+   }
+
    ~tri_t()
    {
       delete [] pt;
-      if (normal)
-         delete normal;
+      delete normal;
       delete [] extents;
    }
 
@@ -42,7 +62,7 @@ struct tri_t
          fprintf(stderr, "tri_t.getPt(): index must be a valid array index.\n");
          exit(EXIT_FAILURE);
       }
-      return ptList[index];
+      return &ptList[index];
    }
 
    void genExtents()
@@ -79,14 +99,6 @@ struct tri_t
       ac -= ac2;
       normal->cross(ab, ac);
       normal->normalize();
-   }
-
-   void w2p(int w, int h)
-   {
-      for (int i = 0; i < 3; i++)
-      {
-         getPt(pt[i])->w2p(w, h);
-      }
    }
 
    bool hit(int x, int y, vec_t *t, vec3_t *bary = NULL)

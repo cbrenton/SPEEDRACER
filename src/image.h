@@ -12,13 +12,12 @@
 class Image {
    public:
       Image() {};
-      Image(int w, int h, std::string name);
+      Image(int w, int h, std::string name = "./images/out.tga");
       ~Image();
-      void setSize(int w, int h);
-      void init();
-      void print(std::ofstream& out, int r, int g, int b);
+      void print(std::ofstream& out, float r, float g, float b);
       void writeHeader(std::ofstream& out);
       void write(colorbuffer *cbuf);
+   private:
       int width;
       int height;
       std::string filename;

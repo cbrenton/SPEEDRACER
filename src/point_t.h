@@ -12,7 +12,12 @@ struct point_t
    vec3_t coords; // The coordinates of the point in 3D space.
    int pX, pY; // The screen coordinates of this point.
 
-   point_t() {};
+   point_t()
+   {
+      index = -1;
+      pX = 0;
+      pY = 0;
+   }
 
    point_t(int _index, vec_t _x, vec_t _y, vec_t _z) :
       index(_index)
@@ -20,6 +25,18 @@ struct point_t
       coords.v[0] = _x;
       coords.v[1] = _y;
       coords.v[2] = _z;
+      pX = 0;
+      pY = 0;
+   }
+
+   point_t(const point_t& pt)
+   {
+      index = pt.index;
+      coords[0] = pt.coords[0];
+      coords[1] = pt.coords[1];
+      coords[2] = pt.coords[2];
+      pX = pt.pX;
+      pY = pt.pY;
    }
 
    void w2p(int w, int h, vec_t scale = (vec_t)1.0)

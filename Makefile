@@ -33,7 +33,7 @@ MAKE   = make
 
 IFLAGS = -I./src -I./lib -I./lib/pngwriter/include -DNO_FREETYPE -L./lib/pngwriter/lib
 LFLAGS = -lpng -lz -lpngwriter -L./lib/pngwriter/lib -I./lib/pngwriter/include
-OPTIMIZE = -O3 -pg
+OPTIMIZE = -pg
 FLOAT = -D_USEDBL
 CFLAGS = $(OPTIMIZE) $(DEBUG) $(ERROR) $(IFLAGS) $(FLOAT)
 CUDA_CFLAGS = $(CUDA)
