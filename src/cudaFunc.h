@@ -16,8 +16,10 @@ __global__ void cudaCoordinateCalc(tri_t* triList,int listSize, tri_t* tri_d,int
 thrust::host_vector<tri_t> cudaConvertCoords(vector<tri_t> triList,int h, int w);
 
 //function that sends the vector to the device
-thrust::device_vector<tri_t> sendTrianglesToDevice(vector<tri_t> triList);
+tri_t* sendTrianglesToDevice(tri_t* triList,int size);
+
+point_t* sendPointsToDevice(point_t* pointList,int size);
 
 //function that retrieves the data vector and returns a direct pointer to it
-thrust::host_vector<tri_t> retrieveCoordinatesFromDevice(thrust::device_vector<tri_t> tri_d);
+tri_t* retrieveTrianglesFromDevice(tri_t* triList_d,int size);
 
