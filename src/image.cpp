@@ -33,7 +33,7 @@ void Image::write(colorbuffer *buf)
    }
 }
 
-void Image::writePixel(int x, int y, vec3 *color)
+void Image::writePixel(int x, int y, vec3_t *color)
 {
    png->plot(x + 1, y + 1, color->x(), color->y(), color->z());
 }

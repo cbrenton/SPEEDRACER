@@ -3,14 +3,14 @@
 
 #include "mat_t.h"
 #include "point_t.h"
-#include "vec3.h"
+#include "vector.h"
 
 #define EPSILON 0.001f
 
 struct tri_t
 {
    point_t **pt;
-   vec3 *normal;
+   vec3_t *normal;
    int *extents;
    bool perVert;
 
@@ -20,9 +20,9 @@ struct tri_t
       pt = new point_t*[3];
       extents = new int[4];
       if (perVert)
-         normal = new vec3();
+         normal = new vec3_t();
       else
-         normal = new vec3[3];
+         normal = new vec3_t[3];
       genNormal();
    }
 
@@ -35,9 +35,9 @@ struct tri_t
       pt[1] = _p2;
       pt[2] = _p3;
       if (perVert)
-         normal = new vec3();
+         normal = new vec3_t();
       else
-         normal = new vec3[3];
+         normal = new vec3_t[3];
       genNormal();
    }
 
@@ -51,7 +51,7 @@ struct tri_t
       delete [] extents;
    }
 
-   inline void genExtents()
+   void genExtents()
    {
       int minX = pt[0]->pX;
       int maxX = pt[0]->pX;
@@ -72,39 +72,31 @@ struct tri_t
       extents[1] = maxX;
       extents[2] = minY;
       extents[3] = maxY;
-      printf("x: %d-%d\n", extents[0], extents[1]);
-      printf("y: %d-%d\n", extents[2], extents[3]);
    }
 
-   inline void genNormal()
+   void genNormal()
    {
       if (!perVert)
       {
          // Calculate the normal.
-         vec3 ab = pt[0]->toF3World() - pt[1]->toF3World();
-         vec3 ac = pt[0]->toF3World() - pt[2]->toF3World();
-         *normal = ab.cross(ac);
+         vec3_t ab = pt[0]->toF3World();
+         vec3_t ab2 = pt[1]->toF3World();
+         ab -= ab2;
+         vec3_t ac = pt[0]->toF3World();
+         vec3_t ac2 = pt[2]->toF3World();
+         ac -= ac2;
+         normal->cross(ab, ac);
          normal->normalize();
       }
       else
       {
-         normal[0] = vec3(1.f, 0.f, 0.f);
-         normal[1] = vec3(0.f, 1.f, 0.f);
-         normal[2] = vec3(0.f, 0.f, 1.f);
+         normal[0] = vec3_t(1.f, 0.f, 0.f);
+         normal[1] = vec3_t(0.f, 1.f, 0.f);
+         normal[2] = vec3_t(0.f, 0.f, 1.f);
       }
    }
 
-   inline vec3 * getNormal(vec3 *bary)
-   {
-      vec3 *ret = new vec3();
-      for (int i = 0; i < 3; i++)
-      {
-         ret->v[i] = normal->v[i] * bary->v[i];
-      }
-      return ret;
-   }
-
-   inline void w2p(int w, int h)
+   void w2p(int w, int h)
    {
       for (int i = 0; i < 3; i++)
       {
@@ -112,18 +104,19 @@ struct tri_t
       }
    }
 
-   bool hit(int x, int y, vec_t *t, vec3 *bary = NULL)
+   bool hit(int x, int y, vec_t *t, vec3_t *bary = NULL)
    {
+#ifndef _CUDA
       if (x < extents[0] || x > extents[1] ||
             y < extents[2] || y > extents[3])
          return false;
-
+#endif
       bool hit = true;
 
       vec_t bBeta, bGamma, bT;
 
-      vec3 pix (x, y, 0);
-      vec3 screenPt[3];
+      vec3_t pix ((vec_t)x, (vec_t)y, 0);
+      vec3_t screenPt[3];
       for (int i = 0; i < 3; i++)
       {
          screenPt[i] = pt[i]->toF3Screen();

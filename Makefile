@@ -31,8 +31,8 @@ MAKE   = make
 
 IFLAGS = -I./src -I./lib -I./lib/pngwriter/include -DNO_FREETYPE -L./lib/pngwriter/lib
 LFLAGS = -lpng -lz -lpngwriter -L./lib/pngwriter/lib -I./lib/pngwriter/include
-OPTIMIZE = -O3
-#FLOAT = -D_USEDBL
+OPTIMIZE = -O3 -pg
+FLOAT = -D_USEDBL
 CFLAGS = $(OPTIMIZE) $(DEBUG) $(ERROR) $(IFLAGS) $(FLOAT)
 CUDA_CFLAGS = $(CUDA)
 LDFLAGS = $(OPTIMIZE) $(DEBUG) $(ERROR) $(LFLAGS)
@@ -42,9 +42,7 @@ MAKEFLAGS = " -j4 "
 TARGET = SPEEDRACER™
 CUDA_TARGET = cuSPEEDRACER™
 MODEL_DIR = models
-#MODEL = bunny500
-MODEL = bunny10k
-#MODEL = test
+MODEL = bunny.orig
 MODEL_EXT = m
 IMG_DIR = images
 IMG_EXT = png
@@ -105,7 +103,7 @@ gdb:
 	gdb ./$(TARGET)  --args $(ARGS)
 
 valgrind:
-	valgrind --tool=memcheck --leak-check=full ./$(TARGET) $(ARGS)
+	valgrind --tool=memcheck --leak-check=full --show-reachable=yes ./$(TARGET) $(ARGS)
 
 clean:
 	$(RM) $(TARGET) $(OBJS)

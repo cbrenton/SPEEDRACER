@@ -1,7 +1,7 @@
 #ifndef _MAT_T_H
 #define _MAT_T_H
 
-#include "vec3.h"
+#include "vector.h"
 
 struct mat_t
 {

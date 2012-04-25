@@ -2,14 +2,14 @@
 #define _POINT_T_H
 
 #include <stdio.h>
-#include "vec3.h"
+#include "vector.h"
 
 #define SCALE_FACTOR 1.0f
 
 struct point_t
 {
    int index; // The index of this point.
-   vec3 coords; // The coordinates of the point in 3D space.
+   vec3_t coords; // The coordinates of the point in 3D space.
    int pX, pY; // The screen coordinates of this point.
 
    point_t() {};
@@ -22,7 +22,7 @@ struct point_t
       coords.v[2] = _z;
    }
 
-   inline void w2p(int w, int h, vec_t scale = (vec_t)1.0)
+   void w2p(int w, int h, vec_t scale = (vec_t)1.0)
    {
       vec_t dim = scale;
       // Convert x.
@@ -38,12 +38,12 @@ struct point_t
       return (index == check);
    }
 
-   vec3 toF3Screen()
+   vec3_t toF3Screen()
    {
-      return vec3(pX, pY, 0);
+      return vec3_t((vec_t)pX, (vec_t)pY, 0);
    }
 
-   vec3 toF3World()
+   vec3_t toF3World()
    {
       return coords;
    }

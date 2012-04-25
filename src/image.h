@@ -9,7 +9,7 @@
 
 #include <string>
 #include "pngwriter.h"
-#include "vec3.h"
+#include "vector.h"
 #include "colorbuffer.h"
 
 using namespace std;
@@ -34,7 +34,7 @@ class Image
       void write(colorbuffer *buf);
 
       // Writes a single pixel to the file.
-      void writePixel(int x, int y, vec3 *color);
+      void writePixel(int x, int y, vec3_t *color);
 
       // Closes the file.
       void close();
