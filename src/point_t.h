@@ -58,17 +58,6 @@ struct point_t
       return (index == check);
    }
 
-   vec3_t toF3Screen()
-   {
-      //return vec3_t((vec_t)pX, (vec_t)pY, 0);
-      return vec3_t((vec_t)pX, (vec_t)pY, 0);
-   }
-
-   vec3_t toF3World()
-   {
-      return coords;
-   }
-   
    inline void print(bool world = false)
    {
       //if (!isConverted || world)

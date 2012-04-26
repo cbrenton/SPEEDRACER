@@ -61,13 +61,18 @@ LIBS = $(LIBFLAGS) -lm
 # Nothing should need changing below this line
 
 # The source files
-SRCS = $(wildcard src/*.cpp) $(wildcard src/**/*.cpp)
-CUDA_SRCS = $(SRCS) $(wildcard src/*.cu) $(wildcard src/**/*.cu)
+SRCS = src/image.cpp src/main.cpp
+CUDA_SRCS = src/image.cpp src/cudaFunc.cu src/main.cu
+#SRCS = $(wildcard src/*.cpp) $(wildcard src/**/*.cpp)
+#CUDA_SRCS = $(SRCS) $(wildcard src/*.cu) $(wildcard src/**/*.cu)
+
 HEADERS = $(wildcard src/*.h) $(wildcard src/**/*.h)
 
-OBJS = $(SRCS:.cpp=.o)
-#CUDA_OBJS = $(CUDA_SRCS:.cu=.o) $(CUDA_SRCS:.cpp=.o)
-CUDA_OBJS = $(CUDA_SRCS:.cpp=.o)
+#OBJS = $(SRCS:.cpp=.o)
+OBJS = $(shell ls src/*.cpp | sed s/\.cpp/\.o/)
+#CUDA_OBJS = $(shell ls src/*.cu | sed s/\.cu/\.o/)
+CUDA_OBJS = src/image.o src/cudaFunc.o src/main.o
+#CUDA_OBJS = $(CUDA_SRCS:.cpp=.o) 
 
 # Rules for building
 all: $(TARGET)
@@ -79,7 +84,6 @@ $(TARGET): $(OBJS) $(HEADERS)
 	$(CC) $(OBJS) $(LDFLAGS) -o $@
 
 $(CUDA_TARGET): $(CUDA_OBJS) $(HEADERS)
-	@#echo $(CUDA_OBJS)
 	$(CC) $(CUDA_OBJS) $(LDFLAGS) -o $@
 
 .cpp.o:

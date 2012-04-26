@@ -24,6 +24,8 @@
 #include "vector.h"
 #include "zbuffer.h"
 
+//#define _CUDA
+
 #ifdef _CUDA
 #include "cudaFunc.h"
 #endif
@@ -43,7 +45,7 @@ vector<point_t> pointList;
 vector<tri_t> triList;
 tri_t *triArray;
 point_t *pointArray;
-vec3_t light (0, 0, 1);
+vec_t light[3] = {0.f, 0.f, 1.f};
 vec_t scale = 1.f;
 bool showProgress = DEF_PROGRESS;
 string outName;
@@ -58,8 +60,10 @@ void makeNormals();
 void trisToArray();
 void printCoords();
 void rasterize();
-void rasterizeTri(tri_t *tris, int triNdx, colorbuffer *buf, zbuffer *zbuf);
-//point_t * findPt(int ndx);
+void rasterizeTri(tri_t *tris, int triSize, colorbuffer *cbuf, zbuffer *zbuf);
+bool cpuHit(tri_t tri, point_t *ptList, int ptSize, int x, int y, vec_t *t, vec_t *bary);
+vec_t dot_h(vec_t *a, vec_t *b);
+vec_t det_h(vec_t *data);
 int findPt(int ndx);
 void readFile(const char* filename);
 void readLine(char* str);
@@ -187,7 +191,7 @@ void makeBoundingBoxes()
 {
    for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
    {
-      triList[triNdx].genExtents();
+      triList[triNdx].genExtents(width, height);
    }
 }
 
@@ -218,10 +222,7 @@ void rasterize()
 #ifdef _CUDA
    cudaRasterizeTri(triArray, (int)triList.size(), cbuf, zbuf);
 #else
-   for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
-   {
-      rasterizeTri(triArray, triNdx, cbuf, zbuf);
-   }
+   rasterizeTri(triArray, (int)triList.size(), cbuf, zbuf);
 #endif
    // Write the color buffer to the image file.
    im->write(cbuf);
@@ -231,41 +232,140 @@ void rasterize()
    delete zbuf;
 }
 
-void rasterizeTri(tri_t *tris, int triNdx, colorbuffer *buf, zbuffer *zbuf)
+void rasterizeTri(tri_t *tris, int triSize, colorbuffer *cbuf, zbuffer *zbuf)
 {
-   tri_t *tri = &tris[triNdx];
-   for (int x = tri->extents[0]; x < tri->extents[1]; x++)
+   int h = cbuf->h;
+   for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
    {
-      for (int y = tri->extents[2]; y < tri->extents[3]; y++)
+      tri_t tri = tris[triNdx];
+      //printf("(%d - %d, %d - %d)\n", tri.extents[0], tri.extents[1], tri.extents[2], tri.extents[3]);
+      for (int x = tri.extents[0]; x < tri.extents[1]; x++)
       {
-         vec_t* z = zbuf->at(x, y);
-         vec_t t = FLT_MAX;
-         vec3_t bary;
-         if (tri->hit(x, y, &t, &bary))
+         for (int y = tri.extents[2]; y < tri.extents[3]; y++)
          {
-            // Check the z-buffer to see if this should be written.
-            if (t > *z)
+            vec_t* z = &zbuf->data[x * h + y];
+            vec_t t = FLT_MAX;
+            vec_t bary[3] = {1.f, 0.f, 0.f};
+            //if (tri->hit(x, y, &t, bary))
+            if (cpuHit(tri, pointArray, (int)pointList.size(), x, y, &t, bary))
             {
-               // Calculate the normal.
-               vec3_t normal = tri->normal;
-               // Calculate the color (N dot L).
-               vec_t colorMag = normal.dot(light);
-               if (colorMag < 0)
+               // Check the z-buffer to see if this should be written.
+               if (t > *z)
                {
-                  colorMag *= -1.f;
+                  // Calculate the normal.
+                  vec_t *normal = tri.normal;
+                  // Calculate the color (N dot L).
+                  vec_t colorMag = dot_h(normal, light);
+                  if (colorMag < 0)
+                  {
+                     colorMag *= -1.f;
+                  }
+                  // Clamp the color to (0.0, 1.0).
+                  colorMag = max((vec_t)0.f, min(colorMag, (vec_t)1.f));
+                  // Write to color buffer.
+                  cbuf->data[x * h + y][0] = colorMag;
+                  cbuf->data[x * h + y][1] = colorMag;
+                  cbuf->data[x * h + y][2] = colorMag;
+                  // Write to z-buffer.
+                  *z = t;
                }
-               // Clamp the color to (0.0, 1.0).
-               colorMag = max((vec_t)0.f, min(colorMag, (vec_t)1.f));
-               // Write to color buffer.
-               buf->at(x, y)->v[0] = colorMag;
-               buf->at(x, y)->v[1] = colorMag;
-               buf->at(x, y)->v[2] = colorMag;
-               // Write to z-buffer.
-               *z = t;
             }
          }
       }
    }
+}
+
+bool cpuHit(tri_t tri, point_t *ptList, int ptSize, int x, int y, vec_t *t, vec_t *bary)
+{
+   if (x < tri.extents[0] || x > tri.extents[1] ||
+         y < tri.extents[2] || y > tri.extents[3])
+      return false;
+
+   bool hit = true;
+
+   vec_t bBeta, bGamma, bT;
+
+   vec_t pix[3] = {(vec_t)x, (vec_t)y, 0.f};
+   vec_t screenPt[3][3];
+   for (int i = 0; i < 3; i++)
+   {
+      screenPt[i][0] = (vec_t)ptList[tri.pt[i]].pX;
+      screenPt[i][1] = (vec_t)ptList[tri.pt[i]].pY;
+      screenPt[i][2] = (vec_t)ptList[tri.pt[i]].coords[2];
+   }
+
+   vec_t A[9] = {screenPt[0][0], screenPt[1][0], screenPt[2][0],
+      screenPt[0][1], screenPt[1][1], screenPt[2][1],
+      1.f, 1.f, 1.f};
+
+   vec_t detA = det_h(A);
+   if (detA == 0)
+   {
+      return false;
+   }
+
+   vec_t baryT[9] = {pix[0], screenPt[1][0], screenPt[2][0],
+      pix[1], screenPt[1][1], screenPt[2][1],
+      1.f, 1.f, 1.f};
+
+   bT = det_h(baryT) / detA;
+
+   if (bT < 0)
+   {
+      hit = false;
+   }
+   else
+   {
+      vec_t baryGamma[9] = {screenPt[0][0], pix[0], screenPt[2][0],
+         screenPt[0][1], pix[1], screenPt[2][1],
+         1.f, 1.f, 1.f};
+
+      bGamma = det_h(baryGamma) / detA;
+
+      if (bGamma < 0 || bGamma > 1)
+      {
+         hit = false;
+      }
+      else
+      {
+         vec_t baryBeta[9] = {screenPt[0][0], screenPt[1][0], pix[0],
+            screenPt[0][1], screenPt[1][1], pix[1],
+            1.f, 1.f, 1.f};
+
+         bBeta = det_h(baryBeta) / detA;
+
+         if (bBeta < 0 || bBeta > 1 - bGamma)
+         {
+            hit = false;
+         }
+      }
+   }
+
+   if (hit)
+   {
+      *t = bT * ptList[tri.pt[0]].coords.v[2] + bBeta * ptList[tri.pt[1]].coords.v[2] + bGamma *
+         ptList[tri.pt[2]].coords.v[2];
+      if (bary)
+      {
+         bary[0] = bT;
+         bary[1] = bBeta;
+         bary[2] = bGamma;
+      }
+   }
+   return hit;
+}
+
+vec_t dot_h(vec_t *a, vec_t *b)
+{
+   return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
+vec_t det_h(vec_t *data)
+{
+   return data[0 * 3 + 0] * data[1 * 3 + 1] * data[2 * 3 + 2] + data[0 * 3 + 1] * data[1 * 3 + 2] *
+      data[2 * 3 + 0] + data[0 * 3 + 2] * data[1 * 3 + 0] * data[2 * 3 + 1] - data[0 * 3 + 2] *
+      data[1 * 3 + 1] * data[2 * 3 + 0] - data[0 * 3 + 0] * data[1 * 3 + 2] * data[2 * 3 + 1] -
+      data[0 * 3 + 1] * data[1 * 3 + 0] * data[2 * 3 + 2];
 }
 
 // Process each line of input save vertices and faces appropriately
