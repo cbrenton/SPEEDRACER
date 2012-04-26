@@ -7,43 +7,43 @@
 struct zbuffer
 {
    int w, h;
-   vec_t ***data;
+   vec_t *data;
 
    zbuffer(int _w, int _h) :
       w(_w), h(_h)
    {
-      data = new vec_t**[w];
+      data = new vec_t[w * h];
       for (int i = 0; i < w; i++)
       {
-         data[i] = new vec_t*[h];
          for (int j = 0; j < h; j++)
          {
-            data[i][j] = new vec_t;
-            *data[i][j] = -FLT_MAX;
+            data[i * h + j] = -FLT_MAX;
          }
       }
    }
 
    ~zbuffer()
    {
-      for (int i = 0; i < w; i++)
-      {
-         for (int j = 0; j < h; j++)
-         {
-            delete data[i][j];
-         }
-         delete [] data[i];
-      }
       delete [] data;
+   }
+
+   vec_t *at(int x, int y)
+   {
+      if (x < 0 || x > w || y < 0 || y > h)
+      {
+         printf("Error: index not in range.\n");
+         exit(EXIT_FAILURE);
+      }
+      return &data[x * h + y];
    }
 
    bool hit(int x, int y, vec_t t)
    {
-      if (t <= *data[x][y])
+      if (t <= data[x * h + y])
       {
          return false;
       }
-      *data[x][y] = t;
+      data[x * h + y] = t;
       return true;
    }
 };

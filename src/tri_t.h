@@ -5,6 +5,7 @@
 #include "point_t.h"
 #include "vector.h"
 #include <vector>
+#include <climits>
 
 #define EPSILON 0.001f
 
@@ -12,47 +13,44 @@ struct tri_t
 {
    point_t *ptList;
    int numPts;
-   int *pt;
-   vec3_t *normal;
-   int *extents;
+   int pt[3];
+   vec3_t normal;
+   int extents[4];
 
    tri_t()
    {
-      pt = new int[3];
-      normal = new vec3_t();
-      extents = new int[4];
    }
 
    tri_t(int _p1, int _p2, int _p3, point_t *list, int listSize) :
       ptList(list), numPts(listSize)
    {
-      pt = new int[3];
-      normal = new vec3_t();
-      extents = new int[4];
       pt[0] = _p1;
       pt[1] = _p2;
       pt[2] = _p3;
+      extents[0] = INT_MAX;
+      extents[1] = -INT_MAX;
+      extents[2] = INT_MAX;
+      extents[3] = -INT_MAX;
    }
 
    tri_t(const tri_t& tri)
    {
       ptList = tri.ptList;
       numPts = tri.numPts;
-      pt = new int[3];
       pt[0] = tri.pt[0];
       pt[1] = tri.pt[1];
       pt[2] = tri.pt[2];
-      normal = new vec3_t();
-      *normal = *tri.normal;
-      extents = new int[4];
-      *extents = *tri.extents;
+      normal[0] = tri.normal[0];
+      normal[1] = tri.normal[1];
+      normal[2] = tri.normal[2];
+      extents[0] = tri.extents[0];
+      extents[1] = tri.extents[1];
+      extents[2] = tri.extents[2];
+      extents[3] = tri.extents[3];
    }
 
    ~tri_t()
    {
-      delete [] pt;
-      delete normal;
-      delete [] extents;
    }
 
    point_t * getPt(int index)
@@ -67,25 +65,17 @@ struct tri_t
 
    void genExtents()
    {
-      int minX = getPt(pt[0])->pX;
-      int maxX = getPt(pt[0])->pX;
-      int minY = getPt(pt[0])->pY;
-      int maxY = getPt(pt[0])->pY;
       for (int i = 0; i < 3; i++)
       {
-         if (getPt(pt[i])->pX < minX)
-            minX = getPt(pt[i])->pX;
-         if (getPt(pt[i])->pX > maxX)
-            maxX = getPt(pt[i])->pX;
-         if (getPt(pt[i])->pY < minY)
-            minY = getPt(pt[i])->pY;
-         if (getPt(pt[i])->pY > maxY)
-            maxY = getPt(pt[i])->pY;
+         if (getPt(pt[i])->pX <extents[0])
+            extents[0] = getPt(pt[i])->pX;
+         if (getPt(pt[i])->pX >extents[1])
+            extents[1] = getPt(pt[i])->pX;
+         if (getPt(pt[i])->pY <extents[2])
+            extents[2] = getPt(pt[i])->pY;
+         if (getPt(pt[i])->pY >extents[3])
+            extents[3] = getPt(pt[i])->pY;
       }
-      extents[0] = minX;
-      extents[1] = maxX;
-      extents[2] = minY;
-      extents[3] = maxY;
    }
 
    void genNormal()
@@ -97,8 +87,8 @@ struct tri_t
       vec3_t ac = getPt(pt[0])->toF3World();
       vec3_t ac2 = getPt(pt[2])->toF3World();
       ac -= ac2;
-      normal->cross(ab, ac);
-      normal->normalize();
+      normal.cross(ab, ac);
+      normal.normalize();
    }
 
    bool hit(int x, int y, vec_t *t, vec3_t *bary = NULL)

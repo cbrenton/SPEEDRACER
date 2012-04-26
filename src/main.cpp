@@ -47,8 +47,6 @@ vec3_t light (0, 0, 1);
 vec_t scale = 1.f;
 bool showProgress = DEF_PROGRESS;
 string outName;
-zbuffer *zbuf;
-colorbuffer *cbuf;
 
 #ifdef _CUDA
 void gpuConvertCoords();
@@ -60,7 +58,7 @@ void makeNormals();
 void trisToArray();
 void printCoords();
 void rasterize();
-void rasterizeTri(tri_t *tris, int triNdx, colorbuffer *buf);
+void rasterizeTri(tri_t *tris, int triNdx, colorbuffer *buf, zbuffer *zbuf);
 //point_t * findPt(int ndx);
 int findPt(int ndx);
 void readFile(const char* filename);
@@ -214,13 +212,17 @@ void rasterize()
 {
    // Initialize the image.
    Image *im = new Image(width, height, outName);
-   zbuf = new zbuffer(width, height);
-   cbuf = new colorbuffer(width, height);
+   zbuffer *zbuf = new zbuffer(width, height);
+   colorbuffer *cbuf = new colorbuffer(width, height);
 
+#ifdef _CUDA
+   cudaRasterizeTri(triArray, (int)triList.size(), cbuf, zbuf);
+#else
    for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
    {
-      rasterizeTri(triArray, triNdx, cbuf);
+      rasterizeTri(triArray, triNdx, cbuf, zbuf);
    }
+#endif
    // Write the color buffer to the image file.
    im->write(cbuf);
    // Close image and clean up.
@@ -229,14 +231,14 @@ void rasterize()
    delete zbuf;
 }
 
-void rasterizeTri(tri_t *tris, int triNdx, colorbuffer *buf)
+void rasterizeTri(tri_t *tris, int triNdx, colorbuffer *buf, zbuffer *zbuf)
 {
    tri_t *tri = &tris[triNdx];
    for (int x = tri->extents[0]; x < tri->extents[1]; x++)
    {
       for (int y = tri->extents[2]; y < tri->extents[3]; y++)
       {
-         vec_t *z = zbuf->data[x][y];
+         vec_t* z = zbuf->at(x, y);
          vec_t t = FLT_MAX;
          vec3_t bary;
          if (tri->hit(x, y, &t, &bary))
@@ -245,9 +247,9 @@ void rasterizeTri(tri_t *tris, int triNdx, colorbuffer *buf)
             if (t > *z)
             {
                // Calculate the normal.
-               vec3_t *normal = tri->normal;
+               vec3_t normal = tri->normal;
                // Calculate the color (N dot L).
-               vec_t colorMag = normal->dot(light);
+               vec_t colorMag = normal.dot(light);
                if (colorMag < 0)
                {
                   colorMag *= -1.f;
@@ -255,9 +257,9 @@ void rasterizeTri(tri_t *tris, int triNdx, colorbuffer *buf)
                // Clamp the color to (0.0, 1.0).
                colorMag = max((vec_t)0.f, min(colorMag, (vec_t)1.f));
                // Write to color buffer.
-               buf->data[x][y].v[0] = colorMag;
-               buf->data[x][y].v[1] = colorMag;
-               buf->data[x][y].v[2] = colorMag;
+               buf->at(x, y)->v[0] = colorMag;
+               buf->at(x, y)->v[1] = colorMag;
+               buf->at(x, y)->v[2] = colorMag;
                // Write to z-buffer.
                *z = t;
             }

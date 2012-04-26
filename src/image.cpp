@@ -59,13 +59,14 @@ void Image::write(colorbuffer *cbuf)
 
    writeHeader(myfile);
 
-   for (int i = 0; i < height; i++)
+   for (int y = 0; y < height; y++)
    {
-      for (int j = 0; j < width; j++)
+      for (int x = 0; x < width; x++)
       {
-         float r = cbuf->data[j][i].v[0];
-         float g = cbuf->data[j][i].v[1];
-         float b = cbuf->data[j][i].v[2];
+         vec3_t pix = cbuf->data[x * height + y];
+         float r = pix.v[0];
+         float g = pix.v[1];
+         float b = pix.v[2];
          print(myfile, r, g, b);
       }
    }
