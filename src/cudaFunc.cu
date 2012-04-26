@@ -245,7 +245,7 @@ __device__ float atomicMin_f(float* val,float z)
 }
 
 //function that increments across all the pixels in range and returns if it is hit
-__device__ bool cudaHit(int x, int y, vec_t *t, vec_t *bary,tri_t* tri_d,point_t* point_d,
+/*__device__ bool cudaHit(int x, int y, vec_t *t, vec_t *bary,tri_t* tri_d,point_t* point_d,
    int index) 
 {
    bool hit=false;
@@ -263,7 +263,7 @@ __device__ bool cudaHit(int x, int y, vec_t *t, vec_t *bary,tri_t* tri_d,point_t
 
    return hit;
 }
-
+*/
 __device__ vec_t dot_d(vec_t* a, vec_t* b)
 {
    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
