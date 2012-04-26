@@ -7,6 +7,7 @@ struct mat_t
 {
    vec_t data[3][3];
 
+#ifndef _CUDA
    mat_t(int n1, int n2, int n3,
          int n4, int n5, int n6,
          int n7, int n8, int n9)
@@ -44,6 +45,7 @@ struct mat_t
          data[1][1] * data[2][0] - data[0][0] * data[1][2] * data[2][1] -
          data[0][1] * data[1][0] * data[2][2];
    }
+#endif
 };
 
 #endif

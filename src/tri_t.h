@@ -17,6 +17,21 @@ struct tri_t
    vec3_t normal;
    int extents[4];
 
+   void debug()
+{
+/*if (extents[0] != 0 || extents[1] != 0 ||
+extents[2] != 0 || extents[3] != 0)
+{
+*/
+printf("pt: [%d, %d, %d]\n", pt[0], pt[1], pt[2]);
+for (int i = 0; i < 4; i++)
+{
+printf("%d,", extents[i]);
+}
+printf("\n");
+//}
+}
+
    tri_t()
    {
    }
@@ -91,13 +106,12 @@ struct tri_t
       normal.normalize();
    }
 
+#ifndef _CUDA
    bool hit(int x, int y, vec_t *t, vec3_t *bary = NULL)
    {
-#ifndef _CUDA
       if (x < extents[0] || x > extents[1] ||
             y < extents[2] || y > extents[3])
          return false;
-#endif
       bool hit = true;
 
       vec_t bBeta, bGamma, bT;
@@ -169,6 +183,7 @@ struct tri_t
       }
       return hit;
    }
+#endif
 };
 
 #endif

@@ -13,11 +13,11 @@
 
 HOST   = $(shell hostname | cut -d x -f 1)
 ifeq ($(HOST), 255)
-   CC  = nvcc
+   CC  = nvcc -arch=sm_20
    CUDA = -D_CUDA
    CU_MAKE = $(CC) $(CFLAGS) $(CUDA_CFLAGS) -c $< -o $@
 else ifeq ($(HOST), tesla)
-   CC  = nvcc
+   CC  = nvcc -arch=sm_20
    CUDA = -D_CUDA
    CU_MAKE = $(CC) $(CFLAGS) $(CUDA_CFLAGS) -c $< -o $@
 else
@@ -33,7 +33,7 @@ MAKE   = make
 
 IFLAGS = -I./src -I./lib -I./lib/pngwriter/include -DNO_FREETYPE -L./lib/pngwriter/lib
 LFLAGS = -lpng -lz -lpngwriter -L./lib/pngwriter/lib -I./lib/pngwriter/include
-OPTIMIZE = -O3 -pg
+#OPTIMIZE = -O3 -pg
 FLOAT = -D_USEDBL
 CFLAGS = $(OPTIMIZE) $(DEBUG) $(ERROR) $(IFLAGS) $(FLOAT)
 CUDA_CFLAGS = $(CUDA)
