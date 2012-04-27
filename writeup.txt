@@ -1,6 +1,7 @@
 Make with "make" for CPU, "make gpu" for CUDA.
 Run with "make run" for CPU, "make cudarun" for CUDA.
 To use the CUDA version, you must rename main.cpp to main.cu.
+On second thought, don't try to run the CUDA version.
 
 1) Chris Brenton, David Burke
 
