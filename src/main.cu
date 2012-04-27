@@ -220,7 +220,7 @@ void rasterize()
    colorbuffer *cbuf = new colorbuffer(width, height);
 
 //#ifdef _CUDA
-   cudaRasterize(triArray, (int)triList.size(), pointArray, cbuf, zbuf);
+   cudaRasterize(triArray, (int)triList.size(), pointArray,pointList.size(), cbuf, zbuf);
 //#else
    //rasterizeTri(triArray, (int)triList.size(), cbuf, zbuf);
 //#endif

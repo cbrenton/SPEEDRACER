@@ -3,11 +3,16 @@
 //using namespace std; 
 /*file for implementing the cuda version of rasterization functions*/
 //
+
+void cudasafe( cudaError_t error, char* message)
+{
+if(error!=cudaSuccess) { fprintf(stderr,"ERROR: %s : %i\n",message,error); exit(-1); }
+}
 tri_t* sendTrianglesToDevice(tri_t* triList,int size)
 {
    tri_t* tri_d;
-   cudaMalloc(&tri_d,sizeof(tri_t)*size);
-   cudaMemcpy(tri_d,triList,sizeof(tri_t)*size,cudaMemcpyHostToDevice);
+   cudasafe(cudaMalloc(&tri_d,sizeof(tri_t)*size),"tri send malloc");
+   cudasafe(cudaMemcpy(tri_d,triList,sizeof(tri_t)*size,cudaMemcpyHostToDevice),"tri cpy");
    //cudaMemcpyToSymbol(tri_d,triList,sizeof(tri_t)*size);
    //printf("TEST\n");
    //printf("%d %d %d \n",tri_d->pt[0],tri_d->pt[1],tri_d->pt[2]);
@@ -23,11 +28,18 @@ tri_t* testTriangles(tri_t* input,int size)
 point_t* sendPointToDeviceConst(point_t* pointList,int size)
 {
    point_t* point_d;
-   cudaMalloc(&point_d,sizeof(point_t)*size);
-   cudaMemcpy(point_d,pointList,sizeof(point_t)*size,cudaMemcpyHostToDevice);
+   cudasafe(cudaMalloc(&point_d,sizeof(point_t)*size),"point malloc");
+   cudasafe(cudaMemcpy(point_d,pointList,sizeof(point_t)*size,cudaMemcpyHostToDevice),"point memcpy");
    //cudaMemcpyToSymbol(point_d,pointList,sizeof(point_t)*size);
    return point_d;
 }
+point_t* testPoints(point_t* input,int size)
+{
+   point_t* point_d;
+   point_d = sendPointsToDevice(input,size);
+   return retrievePointsFromDevice(point_d,size);
+}
+
 
 //Function for retrieving the converted tri_t after the kernel has been run
 //assumes that the tri_return points to a malloced pointer for the given size
@@ -35,16 +47,16 @@ tri_t* retrieveTrianglesFromDevice(tri_t* tri_d,int size)
 {
    tri_t* tri_r;
    tri_r = (tri_t*)malloc(sizeof(tri_t)*size);
-   cudaMemcpy(tri_r,tri_d,sizeof(tri_t)*size,cudaMemcpyDeviceToHost);
-   cudaFree(tri_d);
+   cudasafe(cudaMemcpy(tri_r,tri_d,sizeof(tri_t)*size,cudaMemcpyDeviceToHost),"retieve Tri");
+   cudasafe(cudaFree(tri_d),"free tri");
    return tri_r;
 }
 point_t* retrievePointsFromDevice(point_t* point_d,int size)
 {
    point_t* point_r;
    point_r = (point_t*)malloc(sizeof(point_t)*size);
-   cudaMemcpy(point_r,point_d,sizeof(point_t)*size,cudaMemcpyDeviceToHost);
-   cudaFree(point_d);
+   cudasafe(cudaMemcpy(point_r,point_d,sizeof(point_t)*size,cudaMemcpyDeviceToHost),"retrieve points");
+   cudasafe(cudaFree(point_d),"points");
    return point_r;
 
 }
@@ -53,8 +65,8 @@ point_t* retrievePointsFromDevice(point_t* point_d,int size)
 point_t* sendPointsToDevice(point_t* pointList,int size)
 {
    point_t* point_d;
-   cudaMalloc(&point_d,sizeof(point_t)*size);
-   cudaMemcpy(point_d,pointList,sizeof(point_t)*size,cudaMemcpyHostToDevice);
+   cudasafe(cudaMalloc(&point_d,sizeof(point_t)*size),"malloc point");
+   cudasafe(cudaMemcpy(point_d,pointList,sizeof(point_t)*size,cudaMemcpyHostToDevice),"cpy point");
    return point_d;
 
 }
@@ -62,16 +74,26 @@ point_t* sendPointsToDevice(point_t* pointList,int size)
 vec3_t* sendColorToDevice(colorbuffer* colorbuff,int size)
 {
    vec3_t* color_d;
-   cudaMalloc(&color_d,sizeof(vec3_t)*size);
-   cudaMemcpy(color_d,colorbuff->data,sizeof(vec3_t)*size,cudaMemcpyHostToDevice);
+   //printf("send color size %d\n",size);
+   cudasafe(cudaMalloc(&color_d,sizeof(vec3_t)*size),"color");
+   cudasafe(cudaMemcpy(color_d,colorbuff->data,sizeof(vec3_t)*size,cudaMemcpyHostToDevice),"color2");
    return color_d;
 
 }
+vec3_t* testColor(colorbuffer* input,int size)
+{
+   vec3_t* data;
+   cudasafe(cudaMalloc(&data,sizeof(vec3_t)*size),"test colorM");
+   cudasafe(cudaMemcpy(data,input,sizeof(vec3_t)*size,cudaMemcpyHostToDevice),"memcpy test");
+   return retrieveColorFromDevice(data,size);
+
+}
+//function to retrieve color from the graphics card
 vec3_t* retrieveColorFromDevice(vec3_t* color_d,int size)
 {
    vec3_t* color_r;
    color_r = (vec3_t*)malloc(sizeof(vec3_t)*size);
-   cudaMemcpy(color_r,color_d,sizeof(vec3_t)*size,cudaMemcpyDeviceToHost);
+   cudasafe(cudaMemcpy(color_r,color_d,sizeof(vec3_t)*size,cudaMemcpyDeviceToHost),"color ret");
    return color_r;
 
 }
@@ -92,8 +114,8 @@ point_t* cudaConvertCoords(point_t* pointList,int size, int h, int w,vec_t scale
 vec_t* sendZBufferToDevice(zbuffer* zbuff,int size)
 {
    vec_t* zbuff_d;
-   cudaMalloc(&zbuff_d,sizeof(vec_t)*size);
-   cudaMemcpy(zbuff_d,zbuff->data,sizeof(vec_t)*size,cudaMemcpyHostToDevice);
+   cudasafe(cudaMalloc(&zbuff_d,sizeof(vec_t)*size),"send zbuff");
+   cudasafe(cudaMemcpy(zbuff_d,zbuff->data,sizeof(vec_t)*size,cudaMemcpyHostToDevice),"zbuff cpy");
    return zbuff_d;
 
 }
@@ -131,69 +153,103 @@ __global__ void cudaCoordinateCalc(point_t* point_d, int listSize,int w_in, int 
 int* setupBuffLock(int size)
 {
     int* lock;
-   cudaMalloc(&lock,sizeof(int)*size);
+   cudasafe(cudaMalloc(&lock,sizeof(int)*size),"lock array");
    return lock;
 }
 
 //function for rasterization,called by main
 //HAS NOT BEEN TESTED********
-void cudaRasterize(tri_t* tri,int tri_size,point_t* point_d,colorbuffer* cbuff,
+void cudaRasterize(tri_t* tri,int tri_size,point_t* points,int ptSize,colorbuffer* cbuff,
    zbuffer* zbuff)
 {
    vec3_t* color_d;//device color buffer
    int*lock;
    tri_t* tri_d;
    tri_t* temp;
-   temp = testTriangles(tri,tri_size);
-   printf("passed %d\n",temp->pt0);
+   point_t* point_d;
+   vec3_t* temp_c;
+   point_t* temp_p;
+
+
+   //temp = testTriangles(tri+9,tri_size);
+  // printf("passed %d %d %d\n",temp->pt0,temp->pt1,temp->pt2);
    //printf("sanity check\n");
+   //temp_p = testPoints(points,ptSize);
+   //printf("%f %f %f \n",temp_p->coords.v[0],temp_p->coords.v[1],temp_p->coords.v[2]);
+
+
+   point_d = sendPointsToDevice(points,ptSize);
    tri_d = sendTrianglesToDevice(tri,tri_size);
+   
    int buffsize = cbuff->w * cbuff->h;//calculate the buffer size
+   
+   //printf("buff size %d\n",buffsize);
+   
    color_d = sendColorToDevice(cbuff,buffsize);//setup the color buffer on device
+  
+  // vec3_t* test_c;
+  // test_c = testColor(cbuff,buffsize);
+  // printf("%f,%f,%f\n",test_c[0].v[0],test_c[0].v[1],test_c[0].v[2]);
+  
    vec_t* zbuff_d;
    zbuff_d = sendZBufferToDevice(zbuff,buffsize);
-   dim3 dimBlock(tri_size/30 +1);
-   dim3 dimGrid(30,1);
+   
+   //Kernel size setup
+   dim3 dimBlock(tri_size/20 +1);
+   dim3 dimGrid(20,1);
+   
    lock= setupBuffLock(buffsize);
-   printf("just before the kernel\n");
+   
+   //Call the cuda Kernel
+   //printf("just before the kernel\n");
    cudaRasterizeKernel<<<dimBlock,dimGrid>>>(tri_d,tri_size,point_d,color_d,zbuff_d,cbuff->h,lock);
+   
    cbuff->data = retrieveColorFromDevice(color_d,buffsize);
-   printf("just after the kernel\n");
+   //printf("just after the kernel\n");
    return;
 
 }
+
 //function run in each thread to rasterize with the given data
-//**HAS NOT BEEN TESTED****
 __global__ void cudaRasterizeKernel(tri_t* tri_d,int tri_size,point_t* point_d,vec3_t* color_d,
    vec_t* zbuff_d,int height,int* lock)
 {
+   
    //check if this thread is within range of applicable triangles
-   if(tri_size < blockIdx.x *30 +threadIdx.x)
+   if(tri_size < blockIdx.x *20 +threadIdx.x)
    {
+      //printf("INVALID THREAD\n");
       return;
    }
    
-   tri_t *tri = &tri_d[blockIdx.x*30+threadIdx.x];//register for the current triangle value
-//printf("TEST VALUE\n");
+   tri_t *tri = &tri_d[blockIdx.x*20+threadIdx.x];//register for the current triangle value
+
+
   // for (int x = tri->extents[0]; x < tri->extents[1]; x++)
-   for(int x=0;x<600;x++)
+   for(int x=0;x<60;x++)
    {
     //  for (int y = tri->extents[2]; y < tri->extents[3]; y++)
-      for(int y=0;y<600;y++)
+      for(int y=0;y<60;y++)
       {
          
          vec_t z = zbuff_d[x * height + y];
          vec_t t = FLT_MAX;
          vec_t bary[3];
-         //printf("just before hit");
-         int tmpi = tri_d[blockIdx.x*30+threadIdx.x].pt[0];
-   //      printf("pt[0]: %d\n", tmpi);
-         if (cudaHit(&tri_d[blockIdx.x*30+threadIdx.x],point_d,x,y,&t,bary))
+        
+         //printf("just before hit\n");
+         // int tmpi = tri_d[blockIdx.x*20+threadIdx.x].pt0;
+         //printf("pt[0]: %d\n", tmpi);
+         
+         //Check if hit, then write
+         if (cudaHit(&tri_d[blockIdx.x*20+threadIdx.x],point_d,x,y,&t,bary))
          {
+            // printf("hit pass\n");
+            
             // Check the z-buffer to see if this should be written.
             if (t > z)
             {
-/*
+             
+               /*
                // Calculate the normal.
                vec_t normal[3] = {
                   tri->normal[0],
@@ -202,7 +258,8 @@ __global__ void cudaRasterizeKernel(tri_t* tri_d,int tri_size,point_t* point_d,v
                };
                // Calculate the color (N dot L).
                vec_t colorMag = dot_d(normal, light);
-*/
+               */
+ 
                vec_t colorMag = 1.f;
                if (colorMag < 0)
                {
@@ -210,28 +267,34 @@ __global__ void cudaRasterizeKernel(tri_t* tri_d,int tri_size,point_t* point_d,v
                }
                // Clamp the color to (0.0, 1.0).
                colorMag = max((vec_t)0.f, min(colorMag, (vec_t)1.f));
-               // Write to color buffer. may need changes to not have triple pointer
+               
+              // Write to color buffer
               __syncthreads();
+    
+              //printf("after sync \n");
+
               if(atomicMin_f((float*)&zbuff_d[x * height + y],z) == z)//check if current min
               {
                 while(atomicAdd((float*)&lock[x * height + y],1.f) == 0)//check if current pos is open
                 { 
-                   //write to the buffer
-                   color_d[x * height + y].v[0] = bary[0];
+                   //write to the buffer, commented out for testing
+                  /* color_d[x * height + y].v[0] = bary[0];
                    color_d[x * height + y].v[1] = bary[1];
-                   color_d[x * height + y].v[2] = bary[2];
-
+                   color_d[x * height + y].v[2] = bary[2];*/
+                   printf("color\n"); 
                    atomicExch(&lock[x * height + y],0);
                    break;
+                  //printf("TEST53\n");
                 }
               }
                // Write to z-buffer.
-               //*z = t;
+               // *z = t;
             }
          }
       }
    }
 }
+
 //function to subs for missing atomic min on floats
 __device__ float atomicMin_f(float* val,float z)
 {
@@ -247,6 +310,7 @@ __device__ float atomicMin_f(float* val,float z)
    }
 }
 
+//function to print the matrix
 __device__ void printMat(vec_t *m)
 {
 printf("{%f %f %f\n%f %f %f\n%f %f %f}\n", m[0], m[1], m[2],
@@ -267,30 +331,38 @@ __device__ bool cudaHit(tri_t* tri, point_t *ptList, int x, int y, vec_t *t, vec
    vec_t bBeta, bGamma, bT;
 
    vec_t pix[3] = {(vec_t)x, (vec_t)y, 0.f};
-   vec_t screenPt[3][3];
-//printf("pt[0]: %d\n", tri->pt[0]);
-   for (int i = 0; i < 3; i++)
-   {
-      screenPt[i][0] = (vec_t)ptList[tri->pt[i]].pX;
-      screenPt[i][1] = (vec_t)ptList[tri->pt[i]].pY;
-      screenPt[i][2] = 0.f;
-   }
+    vec_t screenPt[9];
+   //printf("cudahit inti\n");
+   //printf("pt[0]: %d\n", tri->pt0);
 
-   vec_t A[9] = {screenPt[0][0], screenPt[1][0], screenPt[2][0],
-      screenPt[0][1], screenPt[1][1], screenPt[2][1],
+//printf("TEST1\n");
+   screenPt[0] = (vec_t)ptList[tri->pt0].pX;
+   screenPt[1] = (vec_t)ptList[tri->pt0].pY;
+   screenPt[2] = 0.f;
+   screenPt[3] = (vec_t)ptList[tri->pt1].pX;
+   screenPt[4] = (vec_t)ptList[tri->pt1].pY;
+   screenPt[5] = 0.f;
+   screenPt[6] = (vec_t)ptList[tri->pt2].pX;
+   screenPt[7] = (vec_t)ptList[tri->pt2].pY;
+   screenPt[8] = 0.f;
+//printf("screen %d\n",ptList[0].pX);
+
+   vec_t A[9] = {screenPt[0 * 3 + 0], screenPt[1 * 3 + 0], screenPt[2 * 3 + 0],
+      screenPt[0 * 3 + 1], screenPt[1 * 3 + 1], screenPt[2 * 3 + 1],
       1.f, 1.f, 1.f};
 
    vec_t detA = det_d(A);
 //printMat(A);
 //printf("oh yeeeeaaaahhh\n");
 //printf("%d\n", detA);
+
    if (detA == 0)
    {
       return false;
    }
-
-   vec_t baryT[9] = {pix[0], screenPt[1][0], screenPt[2][0],
-      pix[1], screenPt[1][1], screenPt[2][1],
+//printf("past detA test\n");
+   vec_t baryT[9] = {pix[0], screenPt[1 * 3 + 0], screenPt[2 * 3 + 0],
+      pix[1], screenPt[1 * 3 + 1], screenPt[2 * 3 + 1],
       1.f, 1.f, 1.f};
 
    bT = det_d(baryT) / detA;
@@ -301,8 +373,8 @@ __device__ bool cudaHit(tri_t* tri, point_t *ptList, int x, int y, vec_t *t, vec
    }
    else
    {
-      vec_t baryGamma[9] = {screenPt[0][0], pix[0], screenPt[2][0],
-         screenPt[0][1], pix[1], screenPt[2][1],
+      vec_t baryGamma[9] = {screenPt[0 * 3 + 0], pix[0], screenPt[2 * 3 + 0],
+         screenPt[0 * 3 + 1], pix[1], screenPt[2 * 3 + 1],
          1.f, 1.f, 1.f};
 
       bGamma = det_d(baryGamma) / detA;
@@ -313,8 +385,8 @@ __device__ bool cudaHit(tri_t* tri, point_t *ptList, int x, int y, vec_t *t, vec
       }
       else
       {
-         vec_t baryBeta[9] = {screenPt[0][0], screenPt[1][0], pix[0],
-            screenPt[0][1], screenPt[1][1], pix[1],
+         vec_t baryBeta[9] = {screenPt[0 * 3 + 0], screenPt[1 * 3 + 0], pix[0],
+            screenPt[0 * 3 + 1], screenPt[1 * 3 + 1], pix[1],
             1.f, 1.f, 1.f};
 
          bBeta = det_d(baryBeta) / detA;
@@ -328,8 +400,8 @@ __device__ bool cudaHit(tri_t* tri, point_t *ptList, int x, int y, vec_t *t, vec
 
    if (hit)
    {
-      *t = bT * ptList[tri->pt[0]].coords.v[2] + bBeta * ptList[tri->pt[1]].coords.v[2] + bGamma *
-         ptList[tri->pt[2]].coords.v[2];
+      *t = bT * ptList[tri->pt0].coords.v[2] + bBeta * ptList[tri->pt1].coords.v[2] + bGamma *
+         ptList[tri->pt2].coords.v[2];
       if (bary)
       {
          bary[0] = bT;
@@ -337,33 +409,18 @@ __device__ bool cudaHit(tri_t* tri, point_t *ptList, int x, int y, vec_t *t, vec
          bary[2] = bGamma;
       }
    }
+   printf("HIT!!! %d %d\n",x,y);
    return hit;
 }
-//function that increments across all the pixels in range and returns if it is hit
-/*__device__ bool cudaHit(int x, int y, vec_t *t, vec_t *bary,tri_t* tri_d,point_t* point_d,
-   int index) 
-{
-   bool hit=false;
-   int i,j;
-   //loop over the range of x pixels
-   for(i=tri_d->extents[0]; i<tri_d->extents[1];i++)
-   {
-      //loop over the range of y pixels
-     for(j=tri_d->extents[2];j<tri_d->extents[3];j++)
-     {
-        //logic for hit
-     }
- 
-   }
 
-   return hit;
-}
-*/
+
+//function for dot product
 __device__ vec_t dot_d(vec_t* a, vec_t* b)
 {
    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
 
+//function for determinate
 __device__ vec_t det_d(vec_t* data)
 {
    return data[0 * 3 + 0] * data[1 * 3 + 1] * data[2 * 3 + 2] + data[0 * 3 + 1] * data[1 * 3 + 2] *

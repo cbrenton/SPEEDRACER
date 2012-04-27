@@ -33,6 +33,7 @@ point_t* retrievePointsFromDevice(point_t* point_d, int size);
 //function to send points to the constant mem on the graphics card, returns a pointer to it
 point_t* sendPointToDeviceConst(point_t* pointList,int size);
 
+vec3_t* retrieveColorFromDevice(vec3_t* color_d,int size);
 //device function for the dot product of two vectors
 __device__ vec_t dot_d(vec_t* a, vec_t* b);
 
@@ -48,7 +49,7 @@ __global__ void cudaRasterizeKernel(tri_t* tri_d,int tri_size,point_t* point_d,v
    vec_t* zbuff_d,int height,int* lock);
 
 //function wrapper for managing the rasterization process
-void cudaRasterize(tri_t* tri_d,int tri_size,point_t* point_d,colorbuffer* color_d,
+void cudaRasterize(tri_t* tri_d,int tri_size,point_t* point_d,int ptSize,colorbuffer* color_d,
    zbuffer* zbuff_d);
 
 //device function for finding the determinant

@@ -24,7 +24,7 @@ struct tri_t
 extents[2] != 0 || extents[3] != 0)
 {
 */
-printf("pt: [%d, %d, %d]\n", pt[0], pt[1], pt[2]);
+//printf("pt: [%d, %d, %d]\n", pt[0], pt[1], pt[2]);
 for (int i = 0; i < 4; i++)
 {
 printf("%d,", extents[i]);
