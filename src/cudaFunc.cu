@@ -9,6 +9,8 @@ tri_t* sendTrianglesToDevice(tri_t* triList,int size)
    cudaMalloc(&tri_d,sizeof(tri_t)*size);
    cudaMemcpy(tri_d,triList,sizeof(tri_t)*size,cudaMemcpyHostToDevice);
    //cudaMemcpyToSymbol(tri_d,triList,sizeof(tri_t)*size);
+   //printf("TEST\n");
+   //printf("%d %d %d \n",tri_d->pt[0],tri_d->pt[1],tri_d->pt[2]);
    return tri_d;
 }
 tri_t* testTriangles(tri_t* input,int size)
@@ -135,14 +137,17 @@ int* setupBuffLock(int size)
 
 //function for rasterization,called by main
 //HAS NOT BEEN TESTED********
-void cudaRasterize(tri_t* tri_d,int tri_size,point_t* point_d,colorbuffer* cbuff,
+void cudaRasterize(tri_t* tri,int tri_size,point_t* point_d,colorbuffer* cbuff,
    zbuffer* zbuff)
 {
    vec3_t* color_d;//device color buffer
    int*lock;
-  
+   tri_t* tri_d;
+   tri_t* temp;
+   temp = testTriangles(tri,tri_size);
+   printf("passed %d\n",temp->pt0);
    //printf("sanity check\n");
-   
+   tri_d = sendTrianglesToDevice(tri,tri_size);
    int buffsize = cbuff->w * cbuff->h;//calculate the buffer size
    color_d = sendColorToDevice(cbuff,buffsize);//setup the color buffer on device
    vec_t* zbuff_d;
@@ -150,8 +155,10 @@ void cudaRasterize(tri_t* tri_d,int tri_size,point_t* point_d,colorbuffer* cbuff
    dim3 dimBlock(tri_size/30 +1);
    dim3 dimGrid(30,1);
    lock= setupBuffLock(buffsize);
+   printf("just before the kernel\n");
    cudaRasterizeKernel<<<dimBlock,dimGrid>>>(tri_d,tri_size,point_d,color_d,zbuff_d,cbuff->h,lock);
    cbuff->data = retrieveColorFromDevice(color_d,buffsize);
+   printf("just after the kernel\n");
    return;
 
 }
@@ -167,23 +174,25 @@ __global__ void cudaRasterizeKernel(tri_t* tri_d,int tri_size,point_t* point_d,v
    }
    
    tri_t *tri = &tri_d[blockIdx.x*30+threadIdx.x];//register for the current triangle value
-
-//if (tri->extents[0] > 0 || tri->extents[1] > 0
-   //for (int x = tri->extents[0]; x < tri->extents[1]; x++)
-   for (int x = 0; x < 600; x++)
+//printf("TEST VALUE\n");
+  // for (int x = tri->extents[0]; x < tri->extents[1]; x++)
+   for(int x=0;x<600;x++)
    {
-      //for (int y = tri->extents[2]; y < tri->extents[3]; y++)
-      for (int y = 0; y < 600; y++)
+    //  for (int y = tri->extents[2]; y < tri->extents[3]; y++)
+      for(int y=0;y<600;y++)
       {
          
          vec_t z = zbuff_d[x * height + y];
          vec_t t = FLT_MAX;
          vec_t bary[3];
-         if (cudaHit(x, y, &t, bary,tri_d,point_d,blockIdx.x*30+threadIdx.x) || true)
+         //printf("just before hit");
+         int tmpi = tri_d[blockIdx.x*30+threadIdx.x].pt[0];
+   //      printf("pt[0]: %d\n", tmpi);
+         if (cudaHit(&tri_d[blockIdx.x*30+threadIdx.x],point_d,x,y,&t,bary))
          {
             // Check the z-buffer to see if this should be written.
-            //if (t > z)
-            //{
+            if (t > z)
+            {
 /*
                // Calculate the normal.
                vec_t normal[3] = {
@@ -202,14 +211,6 @@ __global__ void cudaRasterizeKernel(tri_t* tri_d,int tri_size,point_t* point_d,v
                // Clamp the color to (0.0, 1.0).
                colorMag = max((vec_t)0.f, min(colorMag, (vec_t)1.f));
                // Write to color buffer. may need changes to not have triple pointer
-/*
-               color_d[x * height + y].v[0] = colorMag;
-               color_d[x * height + y].v[1] = colorMag;
-               color_d[x * height + y].v[2] = colorMag;
-*/
-               // Write to z-buffer.
-               //*z = t;
-            //}
               __syncthreads();
               if(atomicMin_f((float*)&zbuff_d[x * height + y],z) == z)//check if current min
               {
@@ -224,7 +225,9 @@ __global__ void cudaRasterizeKernel(tri_t* tri_d,int tri_size,point_t* point_d,v
                    break;
                 }
               }
-              
+               // Write to z-buffer.
+               //*z = t;
+            }
          }
       }
    }
@@ -244,6 +247,98 @@ __device__ float atomicMin_f(float* val,float z)
    }
 }
 
+__device__ void printMat(vec_t *m)
+{
+printf("{%f %f %f\n%f %f %f\n%f %f %f}\n", m[0], m[1], m[2],
+   m[3], m[4], m[5],
+   m[6], m[7], m[8]);
+}
+
+/*__device__ bool cudaHit(int x, int y, vec_t *t, vec_t *bary,tri_t* tri_d,point_t* point_d,int index*/
+__device__ bool cudaHit(tri_t* tri, point_t *ptList, int x, int y, vec_t *t, vec_t *bary)
+{
+   //printf("hit started\n");
+   //if (x < tri->extents[0] || x > tri->extents[1] ||
+    //     y < tri->extents[2] || y > tri->extents[3])
+     // return false;
+   //printf("passed the test\n");
+   bool hit = true;
+
+   vec_t bBeta, bGamma, bT;
+
+   vec_t pix[3] = {(vec_t)x, (vec_t)y, 0.f};
+   vec_t screenPt[3][3];
+//printf("pt[0]: %d\n", tri->pt[0]);
+   for (int i = 0; i < 3; i++)
+   {
+      screenPt[i][0] = (vec_t)ptList[tri->pt[i]].pX;
+      screenPt[i][1] = (vec_t)ptList[tri->pt[i]].pY;
+      screenPt[i][2] = 0.f;
+   }
+
+   vec_t A[9] = {screenPt[0][0], screenPt[1][0], screenPt[2][0],
+      screenPt[0][1], screenPt[1][1], screenPt[2][1],
+      1.f, 1.f, 1.f};
+
+   vec_t detA = det_d(A);
+//printMat(A);
+//printf("oh yeeeeaaaahhh\n");
+//printf("%d\n", detA);
+   if (detA == 0)
+   {
+      return false;
+   }
+
+   vec_t baryT[9] = {pix[0], screenPt[1][0], screenPt[2][0],
+      pix[1], screenPt[1][1], screenPt[2][1],
+      1.f, 1.f, 1.f};
+
+   bT = det_d(baryT) / detA;
+
+   if (bT < 0)
+   {
+      hit = false;
+   }
+   else
+   {
+      vec_t baryGamma[9] = {screenPt[0][0], pix[0], screenPt[2][0],
+         screenPt[0][1], pix[1], screenPt[2][1],
+         1.f, 1.f, 1.f};
+
+      bGamma = det_d(baryGamma) / detA;
+
+      if (bGamma < 0 || bGamma > 1)
+      {
+         hit = false;
+      }
+      else
+      {
+         vec_t baryBeta[9] = {screenPt[0][0], screenPt[1][0], pix[0],
+            screenPt[0][1], screenPt[1][1], pix[1],
+            1.f, 1.f, 1.f};
+
+         bBeta = det_d(baryBeta) / detA;
+
+         if (bBeta < 0 || bBeta > 1 - bGamma)
+         {
+            hit = false;
+         }
+      }
+   }
+
+   if (hit)
+   {
+      *t = bT * ptList[tri->pt[0]].coords.v[2] + bBeta * ptList[tri->pt[1]].coords.v[2] + bGamma *
+         ptList[tri->pt[2]].coords.v[2];
+      if (bary)
+      {
+         bary[0] = bT;
+         bary[1] = bBeta;
+         bary[2] = bGamma;
+      }
+   }
+   return hit;
+}
 //function that increments across all the pixels in range and returns if it is hit
 /*__device__ bool cudaHit(int x, int y, vec_t *t, vec_t *bary,tri_t* tri_d,point_t* point_d,
    int index) 

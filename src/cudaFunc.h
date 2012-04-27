@@ -40,8 +40,7 @@ __device__ vec_t dot_d(vec_t* a, vec_t* b);
 vec_t* sendZBufferToDevice(zbuffer* zbuff,int size);
 
 //device function to check if there is a hit on the current triangle
-__device__ bool cudaHit(int x, int y, vec_t *t, vec_t *bary ,tri_t* tri_d,point_t* point_d,
-   int index);
+__device__ bool cudaHit(tri_t* tri, point_t *ptList, int x, int y, vec_t *t, vec_t *bary);
 //function to sub for lack of floats in atomic min operation
 __device__ float atomicMin_f(float* val,float z);
 //kernel for rastirzing the traingles
