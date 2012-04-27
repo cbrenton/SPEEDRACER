@@ -13,11 +13,11 @@
 
 HOST   = $(shell hostname | cut -d x -f 1)
 ifeq ($(HOST), 255)
-   CC  = nvcc
+   CC  = nvcc -arch=sm_20
    CUDA = -D_CUDA
    CU_MAKE = $(CC) $(CFLAGS) $(CUDA_CFLAGS) -c $< -o $@
 else ifeq ($(HOST), tesla)
-   CC  = nvcc
+   CC  = nvcc -arch=sm_20
    CUDA = -D_CUDA
    CU_MAKE = $(CC) $(CFLAGS) $(CUDA_CFLAGS) -c $< -o $@
 else
@@ -33,7 +33,7 @@ MAKE   = make
 
 IFLAGS = -I./src -I./lib -I./lib/pngwriter/include -DNO_FREETYPE -L./lib/pngwriter/lib
 LFLAGS = -lpng -lz -lpngwriter -L./lib/pngwriter/lib -I./lib/pngwriter/include
-OPTIMIZE = -O3 -pg
+#OPTIMIZE = -O3 -pg
 FLOAT = -D_USEDBL
 CFLAGS = $(OPTIMIZE) $(DEBUG) $(ERROR) $(IFLAGS) $(FLOAT)
 CUDA_CFLAGS = $(CUDA)
@@ -45,12 +45,12 @@ TARGET = SPEEDRACER™
 CUDA_TARGET = cuSPEEDRACER™
 MODEL_DIR = models
 #MODEL = bunny.orig
-MODEL = bunny500
+MODEL = test
 MODEL_EXT = m
 IMG_DIR = images
 IMG_EXT = tga
-WIDTH = 800
-HEIGHT = 600
+WIDTH = 101
+HEIGHT = 101
 SCALE = 0.25
 ARGS = -i $(MODEL_DIR)/$(MODEL).$(MODEL_EXT) -o $(IMG_DIR)/$(MODEL).$(IMG_EXT) -w $(WIDTH) -h $(HEIGHT) -s $(SCALE)
 

@@ -134,11 +134,11 @@ int main(int argc, char** argv)
       pointsToArray();
 
       // Convert triangle coordinates from world to screen.
-#ifdef _CUDA
+//#ifdef _CUDA
       gpuConvertCoords();
-#else
-      convertCoords();
-#endif
+//#else
+      //convertCoords();
+//#endif
 
       // Generate triangle bounding boxes.
       makeBoundingBoxes();
@@ -220,11 +220,11 @@ void rasterize()
    zbuffer *zbuf = new zbuffer(width, height);
    colorbuffer *cbuf = new colorbuffer(width, height);
 
-#ifdef _CUDA
-   cudaRasterizeTri(triArray, (int)triList.size(), cbuf, zbuf);
-#else
-   rasterizeTri(triArray, (int)triList.size(), cbuf, zbuf);
-#endif
+//#ifdef _CUDA
+   cudaRasterize(triArray, (int)triList.size(), pointArray,pointList.size(), cbuf, zbuf);
+//#else
+   //rasterizeTri(triArray, (int)triList.size(), cbuf, zbuf);
+//#endif
    // Write the color buffer to the image file.
    im->write(cbuf);
    // Close image and clean up.
