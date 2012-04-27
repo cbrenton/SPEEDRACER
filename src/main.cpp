@@ -287,12 +287,27 @@ bool cpuHit(tri_t tri, point_t *ptList, int ptSize, int x, int y, vec_t *t, vec_
 
    vec_t pix[3] = {(vec_t)x, (vec_t)y, 0.f};
    vec_t screenPt[3][3];
+   /*
    for (int i = 0; i < 3; i++)
    {
       screenPt[i][0] = (vec_t)ptList[tri.pt[i]].pX;
       screenPt[i][1] = (vec_t)ptList[tri.pt[i]].pY;
-      screenPt[i][2] = (vec_t)ptList[tri.pt[i]].coords[2];
+      screenPt[i][2] = 0.f;
    }
+   */
+      screenPt[0][0] = (vec_t)ptList[tri.pt0].pX;
+      screenPt[0][1] = (vec_t)ptList[tri.pt0].pY;
+      screenPt[0][2] = 0.f;
+
+
+      screenPt[1][0] = (vec_t)ptList[tri.pt1].pX;
+      screenPt[1][1] = (vec_t)ptList[tri.pt1].pY;
+      screenPt[1][2] = 0.f;
+
+
+      screenPt[2][0] = (vec_t)ptList[tri.pt2].pX;
+      screenPt[2][1] = (vec_t)ptList[tri.pt2].pY;
+      screenPt[2][2] = 0.f;
 
    vec_t A[9] = {screenPt[0][0], screenPt[1][0], screenPt[2][0],
       screenPt[0][1], screenPt[1][1], screenPt[2][1],
@@ -343,8 +358,10 @@ bool cpuHit(tri_t tri, point_t *ptList, int ptSize, int x, int y, vec_t *t, vec_
 
    if (hit)
    {
-      *t = bT * ptList[tri.pt[0]].coords.v[2] + bBeta * ptList[tri.pt[1]].coords.v[2] + bGamma *
-         ptList[tri.pt[2]].coords.v[2];
+      //*t = bT * ptList[tri.pt[0]].coords.v[2] + bBeta * ptList[tri.pt[1]].coords.v[2] + bGamma *
+         //ptList[tri.pt[2]].coords.v[2];
+      *t = bT * ptList[tri.pt0].coords.v[2] + bBeta * ptList[tri.pt1].coords.v[2] + bGamma *
+         ptList[tri.pt2].coords.v[2];
       if (bary)
       {
          bary[0] = bT;

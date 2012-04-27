@@ -13,7 +13,8 @@ struct tri_t
 {
    point_t *ptList;
    int numPts;
-   int pt[3];
+   //int pt[3];
+   int pt0, pt1, pt2;
    vec3_t normal;
    int extents[4];
 
@@ -39,9 +40,9 @@ printf("\n");
    tri_t(int _p1, int _p2, int _p3, point_t *list, int listSize) :
       ptList(list), numPts(listSize)
    {
-      pt[0] = _p1;
-      pt[1] = _p2;
-      pt[2] = _p3;
+      pt0 = _p1;
+      pt1 = _p2;
+      pt2 = _p3;
       extents[0] = INT_MAX;
       extents[1] = -INT_MAX;
       extents[2] = INT_MAX;
@@ -52,9 +53,9 @@ printf("\n");
    {
       ptList = tri.ptList;
       numPts = tri.numPts;
-      pt[0] = tri.pt[0];
-      pt[1] = tri.pt[1];
-      pt[2] = tri.pt[2];
+      pt0 = tri.pt0;
+      pt1 = tri.pt1;
+      pt2 = tri.pt2;
       normal[0] = tri.normal[0];
       normal[1] = tri.normal[1];
       normal[2] = tri.normal[2];
@@ -80,6 +81,7 @@ printf("\n");
 
    void genExtents(int w, int h)
    {
+      /*
       for (int i = 0; i < 3; i++)
       {
          if (getPt(pt[i])->pX <extents[0])
@@ -91,6 +93,35 @@ printf("\n");
          if (getPt(pt[i])->pY >extents[3])
             extents[3] = getPt(pt[i])->pY;
       }
+      */
+         if (getPt(pt0)->pX <extents[0])
+            extents[0] = getPt(pt0)->pX;
+         if (getPt(pt0)->pX >extents[1])
+            extents[1] = getPt(pt0)->pX;
+         if (getPt(pt0)->pY <extents[2])
+            extents[2] = getPt(pt0)->pY;
+         if (getPt(pt0)->pY >extents[3])
+            extents[3] = getPt(pt0)->pY;
+
+
+         if (getPt(pt1)->pX <extents[0])
+            extents[0] = getPt(pt1)->pX;
+         if (getPt(pt1)->pX >extents[1])
+            extents[1] = getPt(pt1)->pX;
+         if (getPt(pt1)->pY <extents[2])
+            extents[2] = getPt(pt1)->pY;
+         if (getPt(pt1)->pY >extents[3])
+            extents[3] = getPt(pt1)->pY;
+
+
+         if (getPt(pt2)->pX <extents[0])
+            extents[0] = getPt(pt2)->pX;
+         if (getPt(pt2)->pX >extents[1])
+            extents[1] = getPt(pt2)->pX;
+         if (getPt(pt2)->pY <extents[2])
+            extents[2] = getPt(pt2)->pY;
+         if (getPt(pt2)->pY >extents[3])
+            extents[3] = getPt(pt2)->pY;
       extents[0] = min(extents[0], w);
       extents[1] = max(extents[1], 0);
       extents[2] = min(extents[2], h);
@@ -100,11 +131,11 @@ printf("\n");
    void genNormal()
    {
       // Calculate the normal.
-      vec3_t ab = getPt(pt[0])->coords;
-      vec3_t ab2 = getPt(pt[1])->coords;
+      vec3_t ab = getPt(pt0)->coords;
+      vec3_t ab2 = getPt(pt1)->coords;
       ab -= ab2;
-      vec3_t ac = getPt(pt[0])->coords;
-      vec3_t ac2 = getPt(pt[2])->coords;
+      vec3_t ac = getPt(pt0)->coords;
+      vec3_t ac2 = getPt(pt2)->coords;
       ac -= ac2;
       normal.cross(ab, ac);
       normal.normalize();
