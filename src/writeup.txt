@@ -1,0 +1,13 @@
+Make with "make" for CPU, "make gpu" for CUDA.
+Run with "make run" for CPU, "make cudarun" for CUDA.
+To use the CUDA version, you must rename main.cpp to main.cu.
+
+1) Chris Brenton, David Burke
+
+2) 5.21 seconds
+
+3) 45.19 seconds
+
+4) Not working.
+
+5) 100% average error (memcpy initialization).

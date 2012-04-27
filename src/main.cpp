@@ -37,6 +37,8 @@
 #define DEF_SCALE
 #define DEF_PROGRESS true
 
+#define NUM_BUNNIES 25
+
 using namespace std;
 
 int width = DEF_W;
@@ -168,7 +170,6 @@ void convertCoords()
 {
    for (int pointNdx = 0; pointNdx < (int)pointList.size(); pointNdx++)
    {
-      //pointList[pointNdx].w2p(width, height, scale);
       pointArray[pointNdx].w2p(width, height, scale);
    }
 }
@@ -238,7 +239,6 @@ void rasterizeTri(tri_t *tris, int triSize, colorbuffer *cbuf, zbuffer *zbuf)
    for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
    {
       tri_t tri = tris[triNdx];
-      //printf("(%d - %d, %d - %d)\n", tri.extents[0], tri.extents[1], tri.extents[2], tri.extents[3]);
       for (int x = tri.extents[0]; x < tri.extents[1]; x++)
       {
          for (int y = tri.extents[2]; y < tri.extents[3]; y++)
@@ -246,7 +246,6 @@ void rasterizeTri(tri_t *tris, int triSize, colorbuffer *cbuf, zbuffer *zbuf)
             vec_t* z = &zbuf->data[x * h + y];
             vec_t t = FLT_MAX;
             vec_t bary[3] = {1.f, 0.f, 0.f};
-            //if (tri->hit(x, y, &t, bary))
             if (cpuHit(tri, pointArray, (int)pointList.size(), x, y, &t, bary))
             {
                // Check the z-buffer to see if this should be written.
@@ -287,14 +286,13 @@ bool cpuHit(tri_t tri, point_t *ptList, int ptSize, int x, int y, vec_t *t, vec_
 
    vec_t pix[3] = {(vec_t)x, (vec_t)y, 0.f};
    vec_t screenPt[3][3];
-   /*
    for (int i = 0; i < 3; i++)
    {
       screenPt[i][0] = (vec_t)ptList[tri.pt[i]].pX;
       screenPt[i][1] = (vec_t)ptList[tri.pt[i]].pY;
       screenPt[i][2] = 0.f;
    }
-   */
+   /* This is for our broke-ass CUDA version.
       screenPt[0][0] = (vec_t)ptList[tri.pt0].pX;
       screenPt[0][1] = (vec_t)ptList[tri.pt0].pY;
       screenPt[0][2] = 0.f;
@@ -308,6 +306,7 @@ bool cpuHit(tri_t tri, point_t *ptList, int ptSize, int x, int y, vec_t *t, vec_
       screenPt[2][0] = (vec_t)ptList[tri.pt2].pX;
       screenPt[2][1] = (vec_t)ptList[tri.pt2].pY;
       screenPt[2][2] = 0.f;
+      */
 
    vec_t A[9] = {screenPt[0][0], screenPt[1][0], screenPt[2][0],
       screenPt[0][1], screenPt[1][1], screenPt[2][1],
@@ -359,9 +358,9 @@ bool cpuHit(tri_t tri, point_t *ptList, int ptSize, int x, int y, vec_t *t, vec_
    if (hit)
    {
       //*t = bT * ptList[tri.pt[0]].coords.v[2] + bBeta * ptList[tri.pt[1]].coords.v[2] + bGamma *
-         //ptList[tri.pt[2]].coords.v[2];
-      *t = bT * ptList[tri.pt0].coords.v[2] + bBeta * ptList[tri.pt1].coords.v[2] + bGamma *
-         ptList[tri.pt2].coords.v[2];
+      //ptList[tri.pt[2]].coords.v[2];
+      *t = bT * ptList[tri.pt[0]].coords.v[2] + bBeta * ptList[tri.pt[1]].coords.v[2] + bGamma *
+         ptList[tri.pt[2]].coords.v[2];
       if (bary)
       {
          bary[0] = bT;
@@ -488,12 +487,16 @@ void readLine(char* str)
          }
          else if (t_i == 3)
          {
-            // Store the third vertex in your face object
-            tmpPt3 = findPt(j);
-            tri_t newTri(tmpPt1, tmpPt2, tmpPt3, pointArray,
-                  (int)pointList.size());
-            // Store the new triangle in your face collection
-            triList.push_back(newTri);
+            // Do this 25 times.
+            for (int i = 0; i < NUM_BUNNIES; i++)
+            {
+               // Store the third vertex in your face object
+               tmpPt3 = findPt(j);
+               tri_t newTri(tmpPt1, tmpPt2, tmpPt3, pointArray,
+                     (int)pointList.size());
+               // Store the new triangle in your face collection
+               triList.push_back(newTri);
+            }
          }
          // If there is more data to process break out
          if (*s =='{') break;
