@@ -18,22 +18,25 @@ struct tri_t
    int extents[4];
 
    void debug()
-{
-/*if (extents[0] != 0 || extents[1] != 0 ||
-extents[2] != 0 || extents[3] != 0)
-{
-*/
-//printf("pt: [%d, %d, %d]\n", pt[0], pt[1], pt[2]);
-for (int i = 0; i < 4; i++)
-{
-printf("%d,", extents[i]);
-}
-printf("\n");
-//}
-}
+   {
+      for (int i = 0; i < 3; i++)
+      {
+         printf("\tpt[%d]: %d\n", i, pt[i]);
+      }
+      printf("\tX range: %d - %d\n", extents[0], extents[1]);
+      printf("\tY range: %d - %d\n", extents[2], extents[3]);
+      printf("--------\n");
+   }
 
    tri_t()
    {
+      pt[0] = -1;
+      pt[1] = -1;
+      pt[2] = -1;
+      extents[0] = INT_MAX;
+      extents[1] = -INT_MAX;
+      extents[2] = INT_MAX;
+      extents[3] = -INT_MAX;
    }
 
    tri_t(int _p1, int _p2, int _p3, point_t *list, int listSize) :
@@ -68,28 +71,29 @@ printf("\n");
    {
    }
 
-   point_t * getPt(int index)
+   point_t getPt(int index)
    {
       if (index > numPts || index < 0)
       {
-         fprintf(stderr, "tri_t.getPt(): index must be a valid array index.\n");
+         fprintf(stderr, "tri_t.getPt(): index %d must be a valid array index.\n", index);
+         printf("numPts: %d\n", numPts);
          exit(EXIT_FAILURE);
       }
-      return &ptList[index];
+      return ptList[index];
    }
 
    void genExtents(int w, int h)
    {
       for (int i = 0; i < 3; i++)
       {
-         if (getPt(pt[i])->pX <extents[0])
-            extents[0] = getPt(pt[i])->pX;
-         if (getPt(pt[i])->pX >extents[1])
-            extents[1] = getPt(pt[i])->pX;
-         if (getPt(pt[i])->pY <extents[2])
-            extents[2] = getPt(pt[i])->pY;
-         if (getPt(pt[i])->pY >extents[3])
-            extents[3] = getPt(pt[i])->pY;
+         if (getPt(pt[i]).pX < extents[0])
+            extents[0] = getPt(pt[i]).pX;
+         if (getPt(pt[i]).pX > extents[1])
+            extents[1] = getPt(pt[i]).pX;
+         if (getPt(pt[i]).pY < extents[2])
+            extents[2] = getPt(pt[i]).pY;
+         if (getPt(pt[i]).pY > extents[3])
+            extents[3] = getPt(pt[i]).pY;
       }
       extents[0] = min(extents[0], w);
       extents[1] = max(extents[1], 0);
@@ -100,11 +104,11 @@ printf("\n");
    void genNormal()
    {
       // Calculate the normal.
-      vec3_t ab = getPt(pt[0])->coords;
-      vec3_t ab2 = getPt(pt[1])->coords;
+      vec3_t ab = getPt(pt[0]).coords;
+      vec3_t ab2 = getPt(pt[1]).coords;
       ab -= ab2;
-      vec3_t ac = getPt(pt[0])->coords;
-      vec3_t ac2 = getPt(pt[2])->coords;
+      vec3_t ac = getPt(pt[0]).coords;
+      vec3_t ac2 = getPt(pt[2]).coords;
       ac -= ac2;
       normal.cross(ab, ac);
       normal.normalize();

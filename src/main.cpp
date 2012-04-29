@@ -26,7 +26,7 @@
 
 //#define _CUDA
 
-#ifdef _CUDA
+#ifdef USE_CUDA
 #include "cudaFunc.h"
 #endif
 
@@ -45,6 +45,8 @@ int width = DEF_W;
 int height = DEF_H;
 vector<point_t> pointList;
 vector<tri_t> triList;
+int pointSize;
+int triSize;
 tri_t *triArray;
 point_t *pointArray;
 vec_t light[3] = {0.f, 0.f, 1.f};
@@ -52,14 +54,14 @@ vec_t scale = 1.f;
 bool showProgress = DEF_PROGRESS;
 string outName;
 
-#ifdef _CUDA
+#ifdef USE_CUDA
 void gpuConvertCoords();
 #endif
 void convertCoords();
 void pointsToArray();
+void trisToArray();
 void makeBoundingBoxes();
 void makeNormals();
-void trisToArray();
 void printCoords();
 void rasterize();
 void rasterizeTri(tri_t *tris, int triSize, colorbuffer *cbuf, zbuffer *zbuf);
@@ -117,6 +119,12 @@ int main(int argc, char** argv)
       }
    }
 
+#ifdef USE_CUDA
+   printf("Using CUDA.\n");
+#else
+   printf("Not using CUDA.\n");
+#endif
+
    // Set up timekeeping.
    initProgress();
 
@@ -134,7 +142,7 @@ int main(int argc, char** argv)
       pointsToArray();
 
       // Convert triangle coordinates from world to screen.
-#ifdef _CUDA
+#ifdef USE_CUDA
       gpuConvertCoords();
 #else
       convertCoords();
@@ -158,17 +166,19 @@ int main(int argc, char** argv)
    }
 }
 
-#ifdef _CUDA
+#ifdef USE_CUDA
 void gpuConvertCoords()
 {
-   pointArray = cudaConvertCoords(pointArray, (int)pointList.size(),
+   pointSize = (int)pointList.size();
+   pointArray = cudaConvertCoords(pointArray, pointSize,
          height, width, scale);
 }
 #endif
 
 void convertCoords()
 {
-   for (int pointNdx = 0; pointNdx < (int)pointList.size(); pointNdx++)
+   pointSize = (int)pointList.size();
+   for (int pointNdx = 0; pointNdx < pointSize; pointNdx++)
    {
       pointArray[pointNdx].w2p(width, height, scale);
    }
@@ -176,15 +186,26 @@ void convertCoords()
 
 void pointsToArray()
 {
-   pointArray = new point_t [pointList.size()];
-   for (int point = 0; point < (int)pointList.size(); point++)
+   pointSize = (int)pointList.size();
+   pointArray = new point_t [pointSize];
+   for (int point = 0; point < pointSize; point++)
    {
       pointArray[point] = pointList[point];
    }
    for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
    {
       triList[triNdx].ptList = pointArray;
-      triList[triNdx].numPts = (int)pointList.size();
+      triList[triNdx].numPts = pointSize;;
+   }
+}
+
+void trisToArray()
+{
+   triSize = (int)triList.size();
+   triArray = new tri_t[triSize];
+   for (int tri = 0; tri < triSize; tri++)
+   {
+      triArray[tri] = triList[tri];
    }
 }
 
@@ -193,6 +214,8 @@ void makeBoundingBoxes()
    for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
    {
       triList[triNdx].genExtents(width, height);
+      //genExtents(triList[triNdx], pointArray, pointSize, width, height);
+      triList[triNdx].debug();
    }
 }
 
@@ -201,15 +224,7 @@ void makeNormals()
    for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
    {
       triList[triNdx].genNormal();
-   }
-}
-
-void trisToArray()
-{
-   triArray = new tri_t[triList.size()];
-   for (int tri = 0; tri < (int)triList.size(); tri++)
-   {
-      triArray[tri] = triList[tri];
+      //genNormal(triList[triNdx], pointArray, pointSize);
    }
 }
 
@@ -220,10 +235,13 @@ void rasterize()
    zbuffer *zbuf = new zbuffer(width, height);
    colorbuffer *cbuf = new colorbuffer(width, height);
 
-#ifdef _CUDA
-   cudaRasterize(triArray, (int)triList.size(), pointArray,pointList.size(), cbuf, zbuf);
+#ifdef USE_CUDA
+   //cudaRasterize(triArray, triSize, pointArray,pointList.size(), cbuf, zbuf);
+   triArray[0].debug();
+   triList[0].debug();
+   cudaTest(triArray, triSize, pointArray, pointSize);
 #else
-   rasterizeTri(triArray, (int)triList.size(), cbuf, zbuf);
+   rasterizeTri(triArray, triSize, cbuf, zbuf);
 #endif
    // Write the color buffer to the image file.
    im->write(cbuf);
@@ -236,7 +254,7 @@ void rasterize()
 void rasterizeTri(tri_t *tris, int triSize, colorbuffer *cbuf, zbuffer *zbuf)
 {
    int h = cbuf->h;
-   for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
+   for (int triNdx = 0; triNdx < triSize; triNdx++)
    {
       tri_t tri = tris[triNdx];
       for (int x = tri.extents[0]; x < tri.extents[1]; x++)
@@ -246,7 +264,7 @@ void rasterizeTri(tri_t *tris, int triSize, colorbuffer *cbuf, zbuffer *zbuf)
             vec_t* z = &zbuf->data[x * h + y];
             vec_t t = FLT_MAX;
             vec_t bary[3] = {1.f, 0.f, 0.f};
-            if (cpuHit(tri, pointArray, (int)pointList.size(), x, y, &t, bary))
+            if (cpuHit(tri, pointArray, pointSize, x, y, &t, bary))
             {
                // Check the z-buffer to see if this should be written.
                if (t > *z)
@@ -394,7 +412,7 @@ int findPt(int ndx)
          return i;
       }
    }
-   fprintf(stderr, "Error: vertex not found.\n");
+   fprintf(stderr, "Error: vertex %d not found.\n", ndx);
    exit(EXIT_FAILURE);
 }
 
@@ -493,7 +511,7 @@ void readLine(char* str)
                // Store the third vertex in your face object
                tmpPt3 = findPt(j);
                tri_t newTri(tmpPt1, tmpPt2, tmpPt3, pointArray,
-                     (int)pointList.size());
+                     pointSize);
                // Store the new triangle in your face collection
                triList.push_back(newTri);
             }

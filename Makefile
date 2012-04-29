@@ -14,12 +14,12 @@
 HOST   = $(shell hostname | cut -d x -f 1)
 ifeq ($(HOST), 255)
    CC  = nvcc -arch=sm_20
-   CUDA = -D_CUDA
-   CU_MAKE = $(CC) $(CFLAGS) $(CUDA_CFLAGS) -c $< -o $@
+   CUDA = -DUSE_CUDA
+   CU_MAKE = $(CC) $(CFLAGS) -c $< -o $@
 else ifeq ($(HOST), tesla)
    CC  = nvcc -arch=sm_20
-   CUDA = -D_CUDA
-   CU_MAKE = $(CC) $(CFLAGS) $(CUDA_CFLAGS) -c $< -o $@
+   CUDA = -DUSE_CUDA
+   CU_MAKE = $(CC) $(CFLAGS) -c $< -o $@
 else
    CC  = g++
    ERROR = -Wconversion -Werror
@@ -32,11 +32,10 @@ SHELL  = /bin/sh
 MAKE   = make
 
 IFLAGS = -I./src -I./lib -I./lib/pngwriter/include -DNO_FREETYPE -L./lib/pngwriter/lib
-LFLAGS = -lpng -lz -lpngwriter -L./lib/pngwriter/lib -I./lib/pngwriter/include
-OPTIMIZE = -O3 -pg
+LFLAGS = 
+OPTIMIZE = -O3 -pg -g
 FLOAT = -D_USEDBL
-CFLAGS = $(OPTIMIZE) $(DEBUG) $(ERROR) $(IFLAGS) $(FLOAT)
-CUDA_CFLAGS = $(CUDA)
+CFLAGS = $(OPTIMIZE) $(DEBUG) $(ERROR) $(IFLAGS) $(FLOAT) $(CUDA)
 LDFLAGS = $(OPTIMIZE) $(DEBUG) $(ERROR) $(LFLAGS)
 
 MAKEFLAGS = " -j4 "
@@ -44,7 +43,7 @@ MAKEFLAGS = " -j4 "
 TARGET = SPEEDRACER™
 CUDA_TARGET = cuSPEEDRACER™
 MODEL_DIR = models
-MODEL = bunny.orig
+MODEL = bunny500
 #MODEL = test
 MODEL_EXT = m
 IMG_DIR = images

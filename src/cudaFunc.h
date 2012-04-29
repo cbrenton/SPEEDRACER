@@ -48,6 +48,8 @@ __device__ float atomicMin_f(float* val,float z);
 __global__ void cudaRasterizeKernel(tri_t* tri_d,int tri_size,point_t* point_d,vec3_t* color_d,
    vec_t* zbuff_d,int height,int* lock);
 
+void cudaTest(tri_t *tri, int tri_size, point_t *points, int ptSize);
+
 //function wrapper for managing the rasterization process
 void cudaRasterize(tri_t* tri_d,int tri_size,point_t* point_d,int ptSize,colorbuffer* color_d,
    zbuffer* zbuff_d);
