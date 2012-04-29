@@ -24,8 +24,6 @@
 #include "vector.h"
 #include "zbuffer.h"
 
-//#define _CUDA
-
 #ifdef USE_CUDA
 #include "cudaFunc.h"
 #endif
@@ -38,6 +36,7 @@
 #define DEF_PROGRESS true
 
 #define NUM_BUNNIES 1
+#define NUM_BLURS 100
 
 using namespace std;
 
@@ -64,6 +63,10 @@ void makeBoundingBoxes();
 void makeNormals();
 void printCoords();
 void rasterize();
+void blurIt(colorbuffer *cbuf);
+//colorbuffer * blur(colorbuffer *cbuf, bool isVert);
+vec3_t * blur(colorbuffer *cbuf, bool isVert);
+vec3_t sample(colorbuffer *cbuf, int x, int y);
 void rasterizeTri(tri_t *tris, int triSize, colorbuffer *cbuf, zbuffer *zbuf);
 bool cpuHit(tri_t tri, point_t *ptList, int ptSize, int x, int y, vec_t *t, vec_t *bary);
 vec_t dot_h(vec_t *a, vec_t *b);
@@ -142,11 +145,11 @@ int main(int argc, char** argv)
       pointsToArray();
 
       // Convert triangle coordinates from world to screen.
-//#ifdef USE_CUDA
+      //#ifdef USE_CUDA
       //gpuConvertCoords();
-//#else
+      //#else
       convertCoords();
-//#endif
+      //#endif
 
       // Generate triangle bounding boxes.
       makeBoundingBoxes();
@@ -239,6 +242,10 @@ void rasterize()
 #else
    rasterizeTri(triArray, triSize, cbuf, zbuf);
 #endif
+
+   // Blur it!
+   blurIt(cbuf);
+
    // Write the color buffer to the image file.
    im->write(cbuf);
    // Close image and clean up.
@@ -383,6 +390,80 @@ bool cpuHit(tri_t tri, point_t *ptList, int ptSize, int x, int y, vec_t *t, vec_
       }
    }
    return hit;
+}
+
+void blurIt(colorbuffer *cbuf)
+{
+   printf("Blurring.\n");
+   for (int i = 0; i < NUM_BLURS; i++)
+   {
+      // Blur horizontally.
+      cbuf->data = blur(cbuf, false);
+      // Blur vertically.
+      cbuf->data = blur(cbuf, true);
+   }
+}
+
+vec3_t *blur(colorbuffer *cbuf, bool isVert)
+{
+   vec_t blurWeights[9] = {
+      1.f / 256.f,
+      8.f / 256.f,
+      28.f / 256.f,
+      56.f / 256.f,
+      70.f / 256.f,
+      56.f / 256.f,
+      28.f / 256.f,
+      8.f / 256.f,
+      1.f / 256.f
+   };
+   int size = 9;
+
+   vec3_t *ret = new vec3_t[cbuf->w * cbuf->h];
+   //colorbuffer *ret = new colorbuffer(cbuf->w, cbuf->h);
+
+   for (int x = 0; x < cbuf->w; x++)
+   {
+      for (int y = 0; y < cbuf->h; y++)
+      {
+         vec3_t result;
+         vec3_t *samples = new vec3_t[size];
+         int start = - size / 2;
+         for (int n = 0; n < size; n++)
+         {
+            int offset = start + n;
+            if (isVert)
+            {
+               samples[n] = sample(cbuf, x, y + offset);
+            }
+            else
+            {
+               samples[n] = sample(cbuf, x + offset, y);
+            }
+            samples[n] *= blurWeights[n];
+            result += samples[n];
+            result.clamp(0, 1);
+         }
+         ret[x * cbuf->h + y] = result;
+         delete [] samples;
+      }
+   }
+   return ret;
+}
+
+vec3_t sample(colorbuffer *cbuf, int x, int y)
+{
+   int newX = x;
+   int newY = y;
+   if (x < 0)
+      newX = 0;
+   if (x > cbuf->w)
+      newX = cbuf->w;
+   if (y < 0)
+      newY = 0;
+   if (y > cbuf->h)
+      newY = cbuf->h;
+   return cbuf->data[newX * cbuf->h + newY];
 }
 
 vec_t dot_h(vec_t *a, vec_t *b)
