@@ -11,7 +11,6 @@ if(error!=cudaSuccess) { fprintf(stderr,"ERROR: %s : %i\n",message,error); exit(
 tri_t* sendTrianglesToDevice(tri_t* triList,int size)
 {
    tri_t* tri_d;
-   printf("sizeof(tri_t) = %d\n", sizeof(tri_t));
    cudasafe(cudaMalloc(&tri_d,sizeof(tri_t)*size),"tri send malloc");
    cudasafe(cudaMemcpy(tri_d,triList,sizeof(tri_t)*size,cudaMemcpyHostToDevice),"tri cpy");
    //cudaMemcpyToSymbol(tri_d,triList,sizeof(tri_t)*size);
@@ -156,13 +155,6 @@ int* setupBuffLock(int size)
     int* lock;
    cudasafe(cudaMalloc(&lock,sizeof(int)*size),"lock array");
    return lock;
-}
-
-void cudaTest(tri_t *tri, int tri_size, point_t *points, int ptSize)
-{
-   tri[0].debug();
-   tri_t *tri_h = testTriangles(tri, tri_size);
-   tri_h[0].debug();
 }
 
 //function for rasterization,called by main

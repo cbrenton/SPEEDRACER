@@ -142,11 +142,11 @@ int main(int argc, char** argv)
       pointsToArray();
 
       // Convert triangle coordinates from world to screen.
-#ifdef USE_CUDA
-      gpuConvertCoords();
-#else
+//#ifdef USE_CUDA
+      //gpuConvertCoords();
+//#else
       convertCoords();
-#endif
+//#endif
 
       // Generate triangle bounding boxes.
       makeBoundingBoxes();
@@ -214,8 +214,7 @@ void makeBoundingBoxes()
    for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
    {
       triList[triNdx].genExtents(width, height);
-      //genExtents(triList[triNdx], pointArray, pointSize, width, height);
-      triList[triNdx].debug();
+      //triList[triNdx].debug();
    }
 }
 
@@ -224,7 +223,6 @@ void makeNormals()
    for (int triNdx = 0; triNdx < (int)triList.size(); triNdx++)
    {
       triList[triNdx].genNormal();
-      //genNormal(triList[triNdx], pointArray, pointSize);
    }
 }
 
@@ -237,8 +235,6 @@ void rasterize()
 
 #ifdef USE_CUDA
    //cudaRasterize(triArray, triSize, pointArray,pointList.size(), cbuf, zbuf);
-   triArray[0].debug();
-   triList[0].debug();
    cudaTest(triArray, triSize, pointArray, pointSize);
 #else
    rasterizeTri(triArray, triSize, cbuf, zbuf);
