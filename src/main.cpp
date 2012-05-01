@@ -29,14 +29,14 @@
 #endif
 
 // Default values.
-#define DEF_W 800
-#define DEF_H 600
+#define DEF_W 1600
+#define DEF_H 1600
 #define DEF_OUTFILE "out.png"
 #define DEF_SCALE
 #define DEF_PROGRESS true
 
 #define NUM_BUNNIES 1
-#define NUM_BLURS 10
+#define NUM_BLURS 100
 
 using namespace std;
 
