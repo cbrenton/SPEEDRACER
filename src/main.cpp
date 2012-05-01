@@ -36,7 +36,7 @@
 #define DEF_PROGRESS true
 
 #define NUM_BUNNIES 1
-#define NUM_BLURS 100
+#define NUM_BLURS 10
 
 using namespace std;
 
@@ -244,6 +244,11 @@ void rasterize()
 
    // Blur it!
    blurIt(cbuf);
+   
+   // Rasterize again, for "bunny, thinking of bunny" image.
+   //zbuf->clear();
+
+   //rasterizeTri(triArray, triSize, cbuf, zbuf);
 
    // Write the color buffer to the image file.
    im->write(cbuf);
@@ -255,6 +260,7 @@ void rasterize()
 
 void rasterizeTri(tri_t *tris, int triSize, colorbuffer *cbuf, zbuffer *zbuf)
 {
+   printf("Rasterizing.\n");
    int h = cbuf->h;
    for (int triNdx = 0; triNdx < triSize; triNdx++)
    {
@@ -394,8 +400,7 @@ bool cpuHit(tri_t tri, point_t *ptList, int ptSize, int x, int y, vec_t *t, vec_
 void blurIt(colorbuffer *cbuf)
 {
    printf("Blurring.\n");
-   //for (int i = 0; i < NUM_BLURS; i++)
-   for (int i = 0; i < 1; i++)
+   for (int i = 0; i < NUM_BLURS; i++)
    {
 #ifdef USE_CUDA
       printf("CUDA BLUR\n");

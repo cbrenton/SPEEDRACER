@@ -27,6 +27,17 @@ struct zbuffer
       delete [] data;
    }
 
+   void clear()
+   {
+      for (int i = 0; i < w; i++)
+      {
+         for (int j = 0; j < h; j++)
+         {
+            data[i * h + j] = -FLT_MAX;
+         }
+      }
+   }
+
    vec_t *at(int x, int y)
    {
       if (x < 0 || x > w || y < 0 || y > h)

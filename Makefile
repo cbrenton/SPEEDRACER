@@ -49,7 +49,7 @@ MODEL_EXT = m
 IMG_DIR = images
 IMG_EXT = tga
 WIDTH = 800
-HEIGHT = 600
+HEIGHT = 800
 SCALE = 0.25
 ARGS = -i $(MODEL_DIR)/$(MODEL).$(MODEL_EXT) -o $(IMG_DIR)/$(MODEL).$(IMG_EXT) -w $(WIDTH) -h $(HEIGHT) -s $(SCALE)
 
