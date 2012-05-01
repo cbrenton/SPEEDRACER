@@ -64,11 +64,8 @@ tri_t* testTriangles(tri_t* input,int size);
 //wrapper function to blur the image with one pass
 vec3_t* cudaBlur(colorbuffer* color,int h, int w);
 
-//kernel for horizontal blur
-__global__ void cudaHBlur(vec3_t* color_d,int h, int w,vec3_t* color_r);
-
-//kernel for verticle blur
-__global__ void cudaVBlur(vec3_t* color_d,int h, int w,vec3_t* color_r);
+//kernel for blur
+__global__ void cudaBlur(vec3_t* color_d, int h, int w, bool isVert);
 
 //function to prevent illegal address calls for range
 __device__ float3 sample_d(vec3_t *cbuf,int h,int w, int x, int y);

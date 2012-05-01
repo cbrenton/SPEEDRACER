@@ -443,23 +443,25 @@ vec3_t* cudaBlur(colorbuffer* color,int h, int w)
    // malloc the result matrix
    cudasafe(cudaMalloc(&color_r,sizeof(vec3_t)*size),"color_r");
    //call the first kernel
-   cudaHBlur<<<dimBlock,dimGrid>>>(color_d,h,w,color_r);
+   cudaBlur<<<dimBlock,dimGrid>>>(color_d,h,w,false);
    //call the second kernel
    dim3 dimBlock2(w,h/32+1);
    dim3 dimGrid2(32,1);
-   //cudaVBlur<<<dimBlock2,dimGrid2>>>(color_r,h,w,color_d);// call the kernel result will be in d
+   // TODO: Use different dims?
+   cudaBlur<<<dimBlock,dimGrid>>>(color_d,h,w,true);
 
    temp= retrieveColorFromDevice(color_d,h*w);
    return temp;
 }
-__global__ void cudaHBlur(vec3_t* color_d,int h, int w,vec3_t* color_r)
+
+__global__ void cudaBlur(vec3_t* color_d, int h, int w, bool isVert)
 {
    if(blockIdx.x*32 + threadIdx.x > w && blockIdx.y > h)
    {
       //printf("failed: bY: %d, bX: %d, tX: %d\n", blockIdx.y, blockIdx.x, threadIdx.x);
       return;//check if this thread is within range to do a clac
    }
-   int i; //iterator for loops 
+   int size = 9;
    float blurWeights[9] = {
       1.f / 256.f,
       8.f / 256.f,
@@ -472,49 +474,26 @@ __global__ void cudaHBlur(vec3_t* color_d,int h, int w,vec3_t* color_r)
       1.f / 256.f
    };
    float3 result;// temp variable for the result
-   for(i=0;i<9;i++)
+   int x = blockIdx.x * 32 + threadIdx.x;
+   int y = blockIdx.y;
+   int start = - size / 2;
+   for (int i = 0; i < size; i++)
    {
-      result = vecAdd_d(result , (sample_d(color_d,h,w,blockIdx.x*32 +threadIdx.x-4+i,blockIdx.y)
-                                *blurWeights[i]));
+      int offset = start + i;
+      if (isVert)
+      {
+         result = vecAdd_d(result, sample_d(color_d, h, w, x, y + offset) * blurWeights[i]);
+      }
+      else
+      {
+         result = vecAdd_d(result, sample_d(color_d, h, w, x + offset, y) * blurWeights[i]);
+      }
    }
-   //printf("bY: %d, bX: %d, tX: %d\n", blockIdx.y, blockIdx.x, threadIdx.x);
-   color_d[blockIdx.y*w+blockIdx.x*32 +threadIdx.x].v[0] = result.x;
-   color_d[blockIdx.y*w+blockIdx.x*32 +threadIdx.x].v[1] = result.y;
-   color_d[blockIdx.y*w+blockIdx.x*32 +threadIdx.x].v[2] = result.z;
+   color_d[x * h + y].v[0] = result.x;
+   color_d[x * h + y].v[1] = result.y;
+   color_d[x * h + y].v[2] = result.z;
    return;
-
 }
-__global__ void cudaVBlur(vec3_t* color_d,int h, int w,vec3_t* color_r)
-{
-   if(blockIdx.x*32 + threadIdx.x > h && blockIdx.y > w)
-   {
-      return;//check if this thread is within range to do a clac
-   }
-   int i; //iterator for loops 
-   float blurWeights[9] = {
-      1.f / 256.f,
-      8.f / 256.f,
-      28.f / 256.f,
-      56.f / 256.f,
-      70.f / 256.f,
-      56.f / 256.f,
-      28.f / 256.f,
-      8.f / 256.f,
-      1.f / 256.f
-   };
-   float3 result;// temp variable for the result
-   for(i=0;i<9;i++)
-   {
-      result = vecAdd_d(result,(sample_d(color_d,h,w,blockIdx.y,blockIdx.x*32 +threadIdx.x-4+i)
-                                 *blurWeights[i]));
-   }
-   color_r[blockIdx.x*32 +threadIdx.x*w + blockIdx.y].v[0] = result.x;
-   color_r[blockIdx.x*32 +threadIdx.x*w + blockIdx.y].v[1] = result.y;
-   color_r[blockIdx.x*32 +threadIdx.x*w + blockIdx.y].v[2] = result.z;
-   return;
-
-}
-
 
 //function to prevent illegal address calls for range
 __device__ float3 sample_d(vec3_t *cbuf,int h,int w, int x, int y)
