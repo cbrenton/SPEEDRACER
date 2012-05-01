@@ -60,4 +60,10 @@ __device__ vec_t det_d(vec_t* data);
 
 //function for testing the transfer of triangles to the device
 tri_t* testTriangles(tri_t* input,int size);
+
+//wrapper function to blur the image with one pass
+vec3_t* cudaBlur(colorbuffer* color,int h, int w);
+
+//kernel for horizontal blur
+__global__ void cudaHBlur(vec3_t* color_d,int h, int w,vec3_t* color_r);
 #endif

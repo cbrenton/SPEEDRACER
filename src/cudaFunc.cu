@@ -431,3 +431,95 @@ __device__ vec_t det_d(vec_t* data)
       data[1 * 3 + 1] * data[2 * 3 + 0] - data[0 * 3 + 0] * data[1 * 3 + 2] * data[2 * 3 + 1] -
       data[0 * 3 + 1] * data[1 * 3 + 0] * data[2 * 3 + 2];
 }
+//wrapper function to blur the image with one pass
+vec3_t* cudaBlur(colorbuffer* color,int h, int w)
+{
+   vec3_t* temp;
+   vec3_t* color_d,color_r; //pointers for the device side of the calc
+   dim3 dimBlock(w/32 +1,h);// a block for each line and each row is divided by 32
+   dim3 dimGrid(32,1);
+   color_d= sendColorToDevice(color,h*w);
+   // malloc the result matrix
+   cudasafe(cudaMalloc(&color_r,sizeof(vec3_t)*size),"color_r");
+   //call the first kernel
+   cudaHBlur<<<dimBlock,dimGrid>>>(color_d,h,w,color_r);
+  //call the second kernel
+   dimBlock(w,h/32+1);
+   dimGrid(32,1);
+   cudaVBlur<<<dimBlock,dimGrid>>>(color_r,h,w,color_d);// call the kernel result will be in d
+
+  temp= retrieveColorFromDevice(color_d,h*w);
+  return temp;
+}
+__global__ void cudaHBlur(vec3_t* color_d,int h, int w,vec3_t* color_r)
+{
+   if(blockIdx.x*32 + threadIdx.x <  w && blockIdx.y < h)
+   {
+      return;//check if this thread is within range to do a clac
+   }
+   int i; //iterator for loops 
+   vec_t blurWeights[9] = {
+      1.f / 256.f,
+      8.f / 256.f,
+      28.f / 256.f,
+      56.f / 256.f,
+      70.f / 256.f,
+      56.f / 256.f,
+      28.f / 256.f,
+      8.f / 256.f,
+      1.f / 256.f
+   };
+   vec3_t result=0;// temp variable for the result
+   for(i=0,i<9;i++)
+   {
+      result += sample_d(color_d,h,w,blockIdx.x*32 +threadIdx.x-4+i,blockIdx.y)*blurWeights[i];
+   }
+   color_r[blockIdx.y*w+blockIdx.x*32 +threadIdx.x]= result;
+   return;
+
+}
+__global__ void cudaVBlur(vec3_t* color_d,int h, int w,vec3_t* color_r)
+{
+   if(blockIdx.x*32 + threadIdx.x <  h && blockIdx.y < w)
+   {
+      return;//check if this thread is within range to do a clac
+   }
+   int i; //iterator for loops 
+   vec_t blurWeights[9] = {
+      1.f / 256.f,
+      8.f / 256.f,
+      28.f / 256.f,
+      56.f / 256.f,
+      70.f / 256.f,
+      56.f / 256.f,
+      28.f / 256.f,
+      8.f / 256.f,
+      1.f / 256.f
+   };
+   vec3_t result=0;// temp variable for the result
+   for(i=0,i<9;i++)
+   {
+      result += sample_d(color_d,h,w,blockIdx.y,blockIdx.x*32 +threadIdx.x-4+i)*blurWeights[i];
+   }
+   color_r[blockIdx.x*32 +threadIdx.x*w + blockIdx.y]= result;
+   return;
+
+}
+
+
+//function to prevent illegal address calls for range
+__device__ vec3_t sample_d(vec3_t *cbuf,int h,int w, int x, int y)
+{
+   int newX = x;
+   int newY = y;
+   if (x < 0)
+      newX = 0;
+   if (x > w)
+      newX = w;
+   if (y < 0)
+      newY = 0;
+   if (y > h)
+      newY = h;
+   return cbuf[newX * w + newY];// changed to w instead of h not sure if that was correct....
+}
+
