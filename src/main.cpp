@@ -36,7 +36,7 @@
 #define DEF_PROGRESS true
 
 #define NUM_BUNNIES 1
-#define NUM_BLURS 10
+#define NUM_BLURS 100
 
 using namespace std;
 
@@ -65,7 +65,7 @@ void printCoords();
 void rasterize();
 void blurIt(colorbuffer *cbuf);
 //colorbuffer * blur(colorbuffer *cbuf, bool isVert);
-vec3_t * blur(colorbuffer *cbuf, bool isVert);
+void blur(colorbuffer *cbuf, bool isVert);
 vec3_t sample(colorbuffer *cbuf, int x, int y);
 void rasterizeTri(tri_t *tris, int triSize, colorbuffer *cbuf, zbuffer *zbuf);
 bool cpuHit(tri_t tri, point_t *ptList, int ptSize, int x, int y, vec_t *t, vec_t *bary);
@@ -162,6 +162,10 @@ int main(int argc, char** argv)
 
       // Go SPEEDRACER go!
       rasterize();
+
+      // Clean up.
+      delete [] triArray;
+      delete [] pointArray;
    }
    else
    {
@@ -407,14 +411,14 @@ void blurIt(colorbuffer *cbuf)
       cbuf->data = cudaBlur(cbuf, cbuf->h, cbuf->w);
 #else
       // Blur horizontally.
-      cbuf->data = blur(cbuf, false);
+      blur(cbuf, false);
       // Blur vertically.
-      cbuf->data = blur(cbuf, true);
+      blur(cbuf, true);
 #endif
    }
 }
 
-vec3_t *blur(colorbuffer *cbuf, bool isVert)
+void blur(colorbuffer *cbuf, bool isVert)
 {
    vec_t blurWeights[9] = {
       1.f / 256.f,
@@ -429,7 +433,7 @@ vec3_t *blur(colorbuffer *cbuf, bool isVert)
    };
    int size = 9;
 
-   vec3_t *ret = new vec3_t[cbuf->w * cbuf->h];
+   //vec3_t *ret = new vec3_t[cbuf->w * cbuf->h];
    //colorbuffer *ret = new colorbuffer(cbuf->w, cbuf->h);
 
    for (int x = 0; x < cbuf->w; x++)
@@ -454,11 +458,11 @@ vec3_t *blur(colorbuffer *cbuf, bool isVert)
             result += samples[n];
             result.clamp(0, 1);
          }
-         ret[x * cbuf->h + y] = result;
+         cbuf->data[x * cbuf->h + y] = result;
          delete [] samples;
       }
    }
-   return ret;
+   //return ret;
 }
 
 vec3_t sample(colorbuffer *cbuf, int x, int y)

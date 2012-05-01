@@ -48,8 +48,8 @@ MODEL = bunny500
 MODEL_EXT = m
 IMG_DIR = images
 IMG_EXT = tga
-WIDTH = 800
-HEIGHT = 800
+WIDTH = 2000
+HEIGHT = 2000
 SCALE = 0.25
 ARGS = -i $(MODEL_DIR)/$(MODEL).$(MODEL_EXT) -o $(IMG_DIR)/$(MODEL).$(IMG_EXT) -w $(WIDTH) -h $(HEIGHT) -s $(SCALE)
 
@@ -96,7 +96,7 @@ lib:
 	$(SHELL) ./lib.sh
 
 run:
-	./$(TARGET) $(ARGS)
+	time ./$(TARGET) $(ARGS)
 
 cudarun:
 	./$(CUDA_TARGET) $(ARGS)
