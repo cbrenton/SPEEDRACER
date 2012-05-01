@@ -444,22 +444,23 @@ vec3_t* cudaBlur(colorbuffer* color,int h, int w)
    cudasafe(cudaMalloc(&color_r,sizeof(vec3_t)*size),"color_r");
    //call the first kernel
    cudaHBlur<<<dimBlock,dimGrid>>>(color_d,h,w,color_r);
-  //call the second kernel
+   //call the second kernel
    dim3 dimBlock2(w,h/32+1);
    dim3 dimGrid2(32,1);
-   cudaVBlur<<<dimBlock2,dimGrid2>>>(color_r,h,w,color_d);// call the kernel result will be in d
+   //cudaVBlur<<<dimBlock2,dimGrid2>>>(color_r,h,w,color_d);// call the kernel result will be in d
 
-  temp= retrieveColorFromDevice(color_d,h*w);
-  return temp;
+   temp= retrieveColorFromDevice(color_d,h*w);
+   return temp;
 }
 __global__ void cudaHBlur(vec3_t* color_d,int h, int w,vec3_t* color_r)
 {
-   if(blockIdx.x*32 + threadIdx.x <  w && blockIdx.y < h)
+   if(blockIdx.x*32 + threadIdx.x > w && blockIdx.y > h)
    {
+      //printf("failed: bY: %d, bX: %d, tX: %d\n", blockIdx.y, blockIdx.x, threadIdx.x);
       return;//check if this thread is within range to do a clac
    }
    int i; //iterator for loops 
-   vec_t blurWeights[9] = {
+   float blurWeights[9] = {
       1.f / 256.f,
       8.f / 256.f,
       28.f / 256.f,
@@ -470,25 +471,27 @@ __global__ void cudaHBlur(vec3_t* color_d,int h, int w,vec3_t* color_r)
       8.f / 256.f,
       1.f / 256.f
    };
-   vec3_t result;// temp variable for the result
-   result = 0;
+   float3 result;// temp variable for the result
    for(i=0;i<9;i++)
    {
-      result =vecAdd_d(result , (sample_d(color_d,h,w,blockIdx.x*32 +threadIdx.x-4+i,blockIdx.y)
+      result = vecAdd_d(result , (sample_d(color_d,h,w,blockIdx.x*32 +threadIdx.x-4+i,blockIdx.y)
                                 *blurWeights[i]));
    }
-   color_r[blockIdx.y*w+blockIdx.x*32 +threadIdx.x]= result;
+   //printf("bY: %d, bX: %d, tX: %d\n", blockIdx.y, blockIdx.x, threadIdx.x);
+   color_d[blockIdx.y*w+blockIdx.x*32 +threadIdx.x].v[0] = result.x;
+   color_d[blockIdx.y*w+blockIdx.x*32 +threadIdx.x].v[1] = result.y;
+   color_d[blockIdx.y*w+blockIdx.x*32 +threadIdx.x].v[2] = result.z;
    return;
 
 }
 __global__ void cudaVBlur(vec3_t* color_d,int h, int w,vec3_t* color_r)
 {
-   if(blockIdx.x*32 + threadIdx.x <  h && blockIdx.y < w)
+   if(blockIdx.x*32 + threadIdx.x > h && blockIdx.y > w)
    {
       return;//check if this thread is within range to do a clac
    }
    int i; //iterator for loops 
-   vec_t blurWeights[9] = {
+   float blurWeights[9] = {
       1.f / 256.f,
       8.f / 256.f,
       28.f / 256.f,
@@ -499,20 +502,22 @@ __global__ void cudaVBlur(vec3_t* color_d,int h, int w,vec3_t* color_r)
       8.f / 256.f,
       1.f / 256.f
    };
-   vec3_t result=0;// temp variable for the result
+   float3 result;// temp variable for the result
    for(i=0;i<9;i++)
    {
       result = vecAdd_d(result,(sample_d(color_d,h,w,blockIdx.y,blockIdx.x*32 +threadIdx.x-4+i)
                                  *blurWeights[i]));
    }
-   color_r[blockIdx.x*32 +threadIdx.x*w + blockIdx.y]= result;
+   color_r[blockIdx.x*32 +threadIdx.x*w + blockIdx.y].v[0] = result.x;
+   color_r[blockIdx.x*32 +threadIdx.x*w + blockIdx.y].v[1] = result.y;
+   color_r[blockIdx.x*32 +threadIdx.x*w + blockIdx.y].v[2] = result.z;
    return;
 
 }
 
 
 //function to prevent illegal address calls for range
-__host__ __device__ vec3_t sample_d(vec3_t *cbuf,int h,int w, int x, int y)
+__device__ float3 sample_d(vec3_t *cbuf,int h,int w, int x, int y)
 {
    int newX = x;
    int newY = y;
@@ -524,15 +529,21 @@ __host__ __device__ vec3_t sample_d(vec3_t *cbuf,int h,int w, int x, int y)
       newY = 0;
    if (y > h)
       newY = h;
-   return cbuf[newX * w + newY];// changed to w instead of h not sure if that was correct....
+   float3 ret = {
+      cbuf[newX * h + newY].v[0],
+      cbuf[newX * h + newY].v[1],
+      cbuf[newX * h + newY].v[2]
+   };
+   //return cbuf[newX * w + newY];// changed to w instead of h not sure if that was correct....
+   return ret;
 }
 //function to add two vec3s together
-__device__ vec3_t vecAdd_d(vec3_t a, vec3_t b)
+__device__ float3 vecAdd_d(float3 a, float3 b)
 {
-   vec3_t result;
-  result.v[0] = a.v[0] +b.v[0];
-  result.v[1] = a.v[1] +b.v[1]; 
-  result.v[2] = a.v[2] +b.v[2];
+   float3 result;
+  result.x = a.x +b.x;
+  result.y = a.y +b.y; 
+  result.z = a.z +b.z;
   return result;
 
 }

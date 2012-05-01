@@ -71,8 +71,14 @@ __global__ void cudaHBlur(vec3_t* color_d,int h, int w,vec3_t* color_r);
 __global__ void cudaVBlur(vec3_t* color_d,int h, int w,vec3_t* color_r);
 
 //function to prevent illegal address calls for range
-__device__ vec3_t sample_d(vec3_t *cbuf,int h,int w, int x, int y);
+__device__ float3 sample_d(vec3_t *cbuf,int h,int w, int x, int y);
 
 // vector add function for the device
-__device__ vec3_t vecAdd_d(vec3_t a, vec3_t b);
+__device__ float3 vecAdd_d(float3 a, float3 b);
+
+inline __host__ __device__ float3 operator*(float3 a, float s)
+{
+       return make_float3(a.x * s, a.y * s, a.z * s);
+}
+
 #endif

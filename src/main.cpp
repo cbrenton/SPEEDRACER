@@ -236,12 +236,11 @@ void rasterize()
    zbuffer *zbuf = new zbuffer(width, height);
    colorbuffer *cbuf = new colorbuffer(width, height);
 
-#ifdef USE_CUDA
+//#ifdef USE_CUDA
    //cudaRasterize(triArray, triSize, pointArray,pointList.size(), cbuf, zbuf);
-   cudaTest(triArray, triSize, pointArray, pointSize);
-#else
+//#else
    rasterizeTri(triArray, triSize, cbuf, zbuf);
-#endif
+//#endif
 
    // Blur it!
    blurIt(cbuf);
@@ -395,12 +394,18 @@ bool cpuHit(tri_t tri, point_t *ptList, int ptSize, int x, int y, vec_t *t, vec_
 void blurIt(colorbuffer *cbuf)
 {
    printf("Blurring.\n");
-   for (int i = 0; i < NUM_BLURS; i++)
+   //for (int i = 0; i < NUM_BLURS; i++)
+   for (int i = 0; i < 1; i++)
    {
+#ifdef USE_CUDA
+      printf("CUDA BLUR\n");
+      cbuf->data = cudaBlur(cbuf, cbuf->h, cbuf->w);
+#else
       // Blur horizontally.
       cbuf->data = blur(cbuf, false);
       // Blur vertically.
       cbuf->data = blur(cbuf, true);
+#endif
    }
 }
 
