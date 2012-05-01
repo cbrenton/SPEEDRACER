@@ -451,6 +451,7 @@ vec3_t* cudaBlur(colorbuffer* color,int h, int w)
    cudaBlur<<<dimBlock,dimGrid>>>(color_d,h,w,true);
 
    temp= retrieveColorFromDevice(color_d,h*w);
+   cudasafe(cudaFree(color_d),"color_d free");
    return temp;
 }
 
@@ -507,7 +508,7 @@ __device__ float3 sample_d(vec3_t *cbuf,int h,int w, int x, int y)
    if (y < 0)
       newY = 0;
    if (y > h)
-      newY = h;
+      newY = h ;
    float3 ret = {
       cbuf[newX * h + newY].v[0],
       cbuf[newX * h + newY].v[1],
