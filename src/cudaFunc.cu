@@ -435,18 +435,19 @@ __device__ vec_t det_d(vec_t* data)
 vec3_t* cudaBlur(colorbuffer* color,int h, int w)
 {
    vec3_t* temp;
-   vec3_t* color_d,color_r; //pointers for the device side of the calc
+   vec3_t *color_d,*color_r; //pointers for the device side of the calc
    dim3 dimBlock(w/32 +1,h);// a block for each line and each row is divided by 32
    dim3 dimGrid(32,1);
+   int size =h*w;
    color_d= sendColorToDevice(color,h*w);
    // malloc the result matrix
    cudasafe(cudaMalloc(&color_r,sizeof(vec3_t)*size),"color_r");
    //call the first kernel
    cudaHBlur<<<dimBlock,dimGrid>>>(color_d,h,w,color_r);
   //call the second kernel
-   dimBlock(w,h/32+1);
-   dimGrid(32,1);
-   cudaVBlur<<<dimBlock,dimGrid>>>(color_r,h,w,color_d);// call the kernel result will be in d
+   dim3 dimBlock2(w,h/32+1);
+   dim3 dimGrid2(32,1);
+   cudaVBlur<<<dimBlock2,dimGrid2>>>(color_r,h,w,color_d);// call the kernel result will be in d
 
   temp= retrieveColorFromDevice(color_d,h*w);
   return temp;
@@ -469,10 +470,12 @@ __global__ void cudaHBlur(vec3_t* color_d,int h, int w,vec3_t* color_r)
       8.f / 256.f,
       1.f / 256.f
    };
-   vec3_t result=0;// temp variable for the result
-   for(i=0,i<9;i++)
+   vec3_t result;// temp variable for the result
+   result = 0;
+   for(i=0;i<9;i++)
    {
-      result += sample_d(color_d,h,w,blockIdx.x*32 +threadIdx.x-4+i,blockIdx.y)*blurWeights[i];
+      result =vecAdd_d(result , (sample_d(color_d,h,w,blockIdx.x*32 +threadIdx.x-4+i,blockIdx.y)
+                                *blurWeights[i]));
    }
    color_r[blockIdx.y*w+blockIdx.x*32 +threadIdx.x]= result;
    return;
@@ -497,9 +500,10 @@ __global__ void cudaVBlur(vec3_t* color_d,int h, int w,vec3_t* color_r)
       1.f / 256.f
    };
    vec3_t result=0;// temp variable for the result
-   for(i=0,i<9;i++)
+   for(i=0;i<9;i++)
    {
-      result += sample_d(color_d,h,w,blockIdx.y,blockIdx.x*32 +threadIdx.x-4+i)*blurWeights[i];
+      result = vecAdd_d(result,(sample_d(color_d,h,w,blockIdx.y,blockIdx.x*32 +threadIdx.x-4+i)
+                                 *blurWeights[i]));
    }
    color_r[blockIdx.x*32 +threadIdx.x*w + blockIdx.y]= result;
    return;
@@ -508,7 +512,7 @@ __global__ void cudaVBlur(vec3_t* color_d,int h, int w,vec3_t* color_r)
 
 
 //function to prevent illegal address calls for range
-__device__ vec3_t sample_d(vec3_t *cbuf,int h,int w, int x, int y)
+__host__ __device__ vec3_t sample_d(vec3_t *cbuf,int h,int w, int x, int y)
 {
    int newX = x;
    int newY = y;
@@ -522,4 +526,13 @@ __device__ vec3_t sample_d(vec3_t *cbuf,int h,int w, int x, int y)
       newY = h;
    return cbuf[newX * w + newY];// changed to w instead of h not sure if that was correct....
 }
+//function to add two vec3s together
+__device__ vec3_t vecAdd_d(vec3_t a, vec3_t b)
+{
+   vec3_t result;
+  result.v[0] = a.v[0] +b.v[0];
+  result.v[1] = a.v[1] +b.v[1]; 
+  result.v[2] = a.v[2] +b.v[2];
+  return result;
 
+}

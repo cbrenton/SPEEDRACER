@@ -66,4 +66,13 @@ vec3_t* cudaBlur(colorbuffer* color,int h, int w);
 
 //kernel for horizontal blur
 __global__ void cudaHBlur(vec3_t* color_d,int h, int w,vec3_t* color_r);
+
+//kernel for verticle blur
+__global__ void cudaVBlur(vec3_t* color_d,int h, int w,vec3_t* color_r);
+
+//function to prevent illegal address calls for range
+__device__ vec3_t sample_d(vec3_t *cbuf,int h,int w, int x, int y);
+
+// vector add function for the device
+__device__ vec3_t vecAdd_d(vec3_t a, vec3_t b);
 #endif
