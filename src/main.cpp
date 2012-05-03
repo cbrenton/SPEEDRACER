@@ -36,7 +36,7 @@
 #define DEF_PROGRESS true
 
 #define NUM_BUNNIES 1
-#define NUM_BLURS 100
+#define NUM_BLURS 10
 
 using namespace std;
 
@@ -64,7 +64,6 @@ void makeNormals();
 void printCoords();
 void rasterize();
 void blurIt(colorbuffer *cbuf);
-//colorbuffer * blur(colorbuffer *cbuf, bool isVert);
 void blur(colorbuffer *cbuf, bool isVert);
 vec3_t sample(colorbuffer *cbuf, int x, int y);
 void rasterizeTri(tri_t *tris, int triSize, colorbuffer *cbuf, zbuffer *zbuf);
@@ -185,6 +184,7 @@ void gpuConvertCoords()
 void convertCoords()
 {
    pointSize = (int)pointList.size();
+   printf("width: %d, height: %d, scale: %f\n", width, height, scale);
    for (int pointNdx = 0; pointNdx < pointSize; pointNdx++)
    {
       pointArray[pointNdx].w2p(width, height, scale);
@@ -433,9 +433,6 @@ void blur(colorbuffer *cbuf, bool isVert)
    };
    int size = 9;
 
-   //vec3_t *ret = new vec3_t[cbuf->w * cbuf->h];
-   //colorbuffer *ret = new colorbuffer(cbuf->w, cbuf->h);
-
    for (int x = 0; x < cbuf->w; x++)
    {
       for (int y = 0; y < cbuf->h; y++)
@@ -462,7 +459,6 @@ void blur(colorbuffer *cbuf, bool isVert)
          delete [] samples;
       }
    }
-   //return ret;
 }
 
 vec3_t sample(colorbuffer *cbuf, int x, int y)

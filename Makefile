@@ -13,18 +13,19 @@
 
 HOST   = $(shell hostname | cut -d x -f 1)
 ifeq ($(HOST), 255)
-   CC  = nvcc -arch=sm_20
+   CUDA_CC  = nvcc -arch=sm_20
    CUDA = -DUSE_CUDA
-   CU_MAKE = $(CC) $(CFLAGS) -c $< -o $@
+   CU_MAKE = $(CUDA_CC) $(CFLAGS) $(CUDA) -c $< -o $@
 else ifeq ($(HOST), tesla)
-   CC  = nvcc -arch=sm_20
+   CUDA_CC  = nvcc -arch=sm_20
    CUDA = -DUSE_CUDA
-   CU_MAKE = $(CC) $(CFLAGS) -c $< -o $@
+   CU_MAKE = $(CUDA_CC) $(CFLAGS) $(CUDA) -c $< -o $@
 else
    CC  = g++
    ERROR = -Wconversion -Werror
    DEBUG = -Wall -ggdb
 endif
+CC     = g++
 CP     = cp
 RM     = rm -rf
 KILL   = killall -9
@@ -35,7 +36,7 @@ IFLAGS = -I./src -I./lib -I./lib/pngwriter/include -DNO_FREETYPE -L./lib/pngwrit
 LFLAGS = 
 OPTIMIZE = -O3 -pg -g
 FLOAT = -D_USEDBL
-CFLAGS = $(OPTIMIZE) $(DEBUG) $(ERROR) $(IFLAGS) $(FLOAT) $(CUDA)
+CFLAGS = $(OPTIMIZE) $(DEBUG) $(ERROR) $(IFLAGS) $(FLOAT)
 LDFLAGS = $(OPTIMIZE) $(DEBUG) $(ERROR) $(LFLAGS)
 
 MAKEFLAGS = " -j4 "
@@ -43,14 +44,14 @@ MAKEFLAGS = " -j4 "
 TARGET = SPEEDRACER™
 CUDA_TARGET = cuSPEEDRACER™
 MODEL_DIR = models
-MODEL = bunny500
+MODEL = cessna500
 #MODEL = test
 MODEL_EXT = m
 IMG_DIR = images
 IMG_EXT = tga
 WIDTH = 2000
 HEIGHT = 2000
-SCALE = 0.25
+SCALE = 15.25
 ARGS = -i $(MODEL_DIR)/$(MODEL).$(MODEL_EXT) -o $(IMG_DIR)/$(MODEL).$(IMG_EXT) -w $(WIDTH) -h $(HEIGHT) -s $(SCALE)
 
 # Additional linker libraries
@@ -83,7 +84,7 @@ $(TARGET): $(OBJS) $(HEADERS)
 	$(CC) $(OBJS) $(LDFLAGS) -o $@
 
 $(CUDA_TARGET): $(CUDA_OBJS) $(HEADERS)
-	$(CC) $(CUDA_OBJS) $(LDFLAGS) -o $@
+	$(CUDA_CC) $(CUDA_OBJS) $(LDFLAGS) -o $@
 
 .cpp.o:
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -111,7 +112,7 @@ force:
 	@make clean && make all
 
 gdb:
-	gdb ./$(TARGET)  --args $(ARGS)
+	gdb --args ./$(TARGET) $(ARGS)
 
 valgrind:
 	valgrind --tool=memcheck --leak-check=full --show-reachable=yes ./$(TARGET) $(ARGS)

@@ -13,7 +13,11 @@ struct tri_t
 {
    point_t *ptList;
    int numPts;
+#ifdef USE_CUDA
    int pt[3];
+#else
+   vec3_t pt[3];
+#endif
    vec3_t normal;
    int extents[4];
 
@@ -21,7 +25,11 @@ struct tri_t
    {
       for (int i = 0; i < 3; i++)
       {
+#ifdef USE_CUDA
          printf("\tpt[%d]: %d\n", i, pt[i]);
+#else
+         printf("\tpt[%d]: <%f, %f, %f>\n", i, pt[i]);
+#endif
       }
       printf("\tX range: %d - %d\n", extents[0], extents[1]);
       printf("\tY range: %d - %d\n", extents[2], extents[3]);

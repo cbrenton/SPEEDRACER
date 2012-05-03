@@ -48,9 +48,13 @@ struct point_t
       // Convert x.
       vec_t tmpX = coords.v[0] + scale; // Shift.
       pX = (int)(tmpX * (vec_t)(w - 1) / 2 * ((vec_t)1.0 / scale)); // Scale.
+      // Make sure pX is within image bounds.
+      pX = min(w, max(pX, 0));
       // Convert y.
       vec_t tmpY = coords.v[1] + scale; // Shift.
       pY = (int)(tmpY * (vec_t)(h - 1) / 2 * ((vec_t)1.0 / scale)); // Scale.
+      // Make sure pX is within image bounds.
+      pY = min(h, max(pY, 0));
    }
 
    inline bool isNum(int check)
